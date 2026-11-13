@@ -530,7 +530,7 @@ private fun IntSlider(title: String, value: Int, range: IntRange, suffix: String
             value = value.toFloat(),
             onValueChange = { onChange(it.roundToInt().coerceIn(range)) },
             valueRange = range.first.toFloat()..range.last.toFloat(),
-            steps = (range.last - range.first - 1).coerceIn(0, 200),
+            steps = if (range.last - range.first <= 10) range.last - range.first - 1 else 0,
         )
     }
 }

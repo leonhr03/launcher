@@ -7,6 +7,7 @@ import android.text.format.DateFormat
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -56,6 +57,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -167,9 +172,11 @@ fun LauncherRoot(activity: Activity, homePress: Int) {
     MaterialTheme(colorScheme = darkColorScheme()) {
         Box(Modifier.fillMaxSize()) {
             // ===================== Startbildschirm =====================
+            val homeAlpha by animateFloatAsState(if (c.drawerOpen) 0f else 1f, tween(220), label = "home")
             Box(
                 Modifier
                     .fillMaxSize()
+                    .graphicsLayer { alpha = homeAlpha }
                     .background(Color.Black.copy(alpha = prefs.wallpaperDim))
                     .pointerInput(Unit) {
                         detectTapGestures(
@@ -477,8 +484,9 @@ private fun EditBar(c: LauncherController, modifier: Modifier) {
         Text(
             if (c.selectedKey == null) "Tippe eine App an, dann eine zweite zum Tauschen"
             else "Jetzt Ziel antippen (App, freier Platz oder Dock)",
-            color = Color.White.copy(alpha = 0.85f),
+            color = Color.White,
             fontSize = 12.sp,
+            style = TextStyle(shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 6f)),
             modifier = Modifier.padding(top = 4.dp, start = 4.dp),
         )
     }
@@ -489,7 +497,7 @@ private fun Pill(text: String, strong: Boolean = false, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(50))
-            .background(if (strong) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.22f))
+            .background(if (strong) Color.White.copy(alpha = 0.95f) else Color.Black.copy(alpha = 0.45f))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 7.dp),
     ) {
