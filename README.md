@@ -17,29 +17,49 @@ Die Symbolgröße ist frei einstellbar, damit sie zu deinem bisherigen Launcher 
 
 | Aktion | Was passiert |
 |---|---|
-| App antippen | App öffnen (mit Zoom-Animation) |
-| Lange auf App drücken | Menü: App-Verknüpfungen, Umbenennen, Dock, Entfernen, Ausblenden, App-Info, Deinstallieren |
-| Lange auf freie Fläche | Bearbeitungsmodus (Symbole wackeln) |
-| Im Bearbeitungsmodus | App antippen, dann eine zweite → Plätze tauschen. „–“ entfernt vom Home-Bildschirm. „+“-Platz = dorthin verschieben |
-| Nach oben wischen | App-Mediathek (alphabetisch, mit Suche) |
-| Nach unten wischen | Suche |
+| App antippen | App öffnen (Zoom-Animation) |
+| Lange auf App drücken | iOS-Menü: App-Verknüpfungen, Home-Bildschirm bearbeiten, Umbenennen, Dock, App-Info, App entfernen |
+| Lange drücken **und ziehen** | App/Ordner/Widget verschieben – freie Plätze sind erlaubt (Lücken wie bei MIUI) |
+| App auf andere App ziehen | Ordner erstellen (Ordnertitel antippen zum Umbenennen) |
+| App auf Ordner ziehen | In den Ordner legen |
+| Beim Ziehen an den Rand | Seite wechseln |
+| Lange auf freie Fläche | Bearbeitungsmodus (Symbole wackeln) – oben links **+** für Widgets |
+| Nach oben wischen | App-Mediathek (Kategorien wie iOS, Suche) |
+| Nach unten wischen / „Suchen“ | Suche |
 | Home-Taste | zurück zur ersten Seite |
 
-Alle Gesten sind in den Einstellungen änderbar (auch Doppeltippen zum Sperren → dafür die Bedienungshilfe „Clean Launcher – Gesten“ aktivieren).
+## Dein bisheriges Layout übernehmen
+
+Xiaomi speichert die Anordnung des MIUI/HyperOS-Launchers in einem geschützten Bereich, den andere Apps ohne Root nicht lesen dürfen. Ein automatischer Import ist daher nicht möglich.
+So baust du es schnell nach:
+1. **Einstellungen → Raster:** Spalten/Zeilen wie bei MIUI (meist 4 × 6 oder 5 × 6), Symbolgröße angleichen.
+2. **Widgets:** Bearbeitungsmodus → **+** → dieselben Widgets deiner Apps wählen (z. B. Xiaomi-Uhr, Wetter, Kalender). Größe über „Größe ändern“ anpassen.
+3. **Apps & Ordner** per Drag & Drop an dieselben Plätze ziehen.
+4. **Hintergrund:** Einstellungen → Hintergrundbild → „Aktuelles Hintergrundbild übernehmen“.
+
+> Hinweis: Die speziellen MIUI-„Widget-Galerie“-Widgets (MAML) funktionieren nur im Xiaomi-Launcher. Normale Android-Widgets funktionieren alle.
+
+## iOS-Sperrbildschirm
+
+Einstellungen → **Sperrbildschirm (iOS-Stil)** einschalten und die angezeigten Berechtigungen erteilen (Über anderen Apps anzeigen, bei Xiaomi: „Auf Sperrbildschirm anzeigen“, „Pop-up-Fenster im Hintergrund“, Autostart, Akku „Keine Einschränkungen“).
+Er zeigt große Uhr, Datum, Mitteilungen, Taschenlampe und Kamera. Deine echte Sperre (PIN/Fingerabdruck) bleibt aktiv – nach dem Hochwischen fragt das System wie gewohnt.
 
 ## Einstellungen
 
-Erreichbar über das Symbol „Launcher-Einstellungen“ oder im Bearbeitungsmodus über „Einstellungen“.
-
+- **Aussehen:** iOS-Schrift (Inter), Glas-Effekt, „Suchen“-Taste, rote Badges, Widget-Stil (hell/dunkel/Glas), Widget-Ecken
+- **Hintergrundbild:** aus der Galerie (für Home/Sperrbildschirm/beide) oder das aktuelle übernehmen
+- **Sperrbildschirm:** an/aus, Mitteilungen, Inhalte verbergen bis entsperrt, Taschenlampe/Kamera, Uhrfarbe, Abdunkeln, Vorschau
 - **Raster:** Spalten, Zeilen, Seitenrand, Abstand oben
 - **App-Symbole:** Größe (32–100 dp), Form (Original, iOS-Squircle, abgerundet, Kreis, Quadrat, Tropfen), Eckenradius, Schatten, Animationen
 - **Beschriftung:** an/aus, Größe, Farbe, Schatten, fett, im Dock
 - **Dock:** an/aus, Anzahl, Hintergrund, Deckkraft, Farbe, Eckenradius, Abstand
-- **Startbildschirm:** Uhr-Widget, Seitenpunkte, Hintergrund abdunkeln, Statusleiste ausblenden, dunkle Statussymbole, Hochformat, neue Apps automatisch hinzufügen
-- **Gesten:** wischen hoch/runter, doppelt tippen, lange drücken – jeweils frei belegbar
-- **App-Mediathek:** Liste oder Raster, Deckkraft, Unschärfe, Tastatur automatisch, Websuche
-- **Apps:** ausgeblendete und umbenannte Apps verwalten
+- **Startbildschirm:** Seitenpunkte, Abdunkeln, Statusleiste, Hochformat, neue Apps automatisch hinzufügen
+- **Gesten:** wischen hoch/runter, doppelt tippen, lange drücken – frei belegbar
+- **App-Mediathek:** iOS-Kategorien, Liste oder Raster
+- **Apps:** ausgeblendete und umbenannte Apps, Mitteilungszugriff
 - **Zurücksetzen:** nur Design oder alles
+
+Schrift: [Inter](https://github.com/rsms/inter) (SIL Open Font License, siehe `FONT-LICENSE-Inter.txt`).
 
 ## Selbst bauen
 

@@ -287,6 +287,7 @@ private fun LockScreen(
                 color = clockColor,
                 fontSize = 21.sp,
                 fontWeight = FontWeight.SemiBold,
+                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 2f), 12f)),
             )
             Text(
                 DateFormat.format(if (prefs.clock24h) "HH:mm" else "h:mm", Date(now)).toString(),
@@ -294,6 +295,7 @@ private fun LockScreen(
                 fontSize = 96.sp,
                 fontWeight = FontWeight.Bold,
                 lineHeight = 100.sp,
+                style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 3f), 18f)),
             )
 
             // Mitteilungen
