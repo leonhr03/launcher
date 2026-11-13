@@ -129,7 +129,7 @@ fun WidgetPicker(c: LauncherController) {
                             modifier = Modifier.padding(top = 14.dp, start = 4.dp),
                         )
                         is PickerRow.Builtin -> PickerCard("${row.type.title}", "${row.type.spanX} × ${row.type.spanY}", { c.addBuiltin(row.type) }) {
-                            Box(Modifier.size(150.dp, if (row.type.spanX > row.type.spanY) 75.dp else 150.dp)) {
+                            Box(Modifier.size(if (row.type.spanX > row.type.spanY) 300.dp else 150.dp, 150.dp)) {
                                 BuiltinWidgetView(row.type, prefs, Modifier.fillMaxSize())
                             }
                         }

@@ -25,6 +25,10 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -92,6 +96,7 @@ import com.cleanlauncher.widgets.Widgets
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun LauncherRoot(activity: Activity, c: LauncherController, homePress: Int) {
     val prefs = c.prefs
@@ -119,7 +124,7 @@ fun LauncherRoot(activity: Activity, c: LauncherController, homePress: Int) {
     val view = LocalView.current
     SideEffect {
         val ctrl = WindowCompat.getInsetsController(activity.window, view)
-        if (prefs.hideStatusBar) {
+        if (prefs.hideStatusBar || c.editMode) {
             ctrl.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             ctrl.hide(WindowInsetsCompat.Type.statusBars())
         } else {
@@ -204,10 +209,12 @@ fun LauncherRoot(activity: Activity, c: LauncherController, homePress: Int) {
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .statusBarsPadding()
+                        .then(
+                            if (prefs.hideStatusBar) Modifier.statusBarsPadding()
+                            else Modifier.windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility),
+                        )
                         .navigationBarsPadding(),
                 ) {
-                    Spacer(Modifier.height(if (c.editMode) 50.dp else 0.dp))
                     HorizontalPager(
                         state = pager,
                         modifier = Modifier
@@ -222,7 +229,7 @@ fun LauncherRoot(activity: Activity, c: LauncherController, homePress: Int) {
                     if (prefs.dockEnabled) Dock(c, dock)
                     Spacer(Modifier.height(8.dp))
                 }
-                if (c.editMode) EditBar(c, Modifier.align(Alignment.TopCenter).statusBarsPadding())
+                if (c.editMode) EditBar(c, Modifier.align(Alignment.TopCenter).padding(top = 2.dp))
             }
 
             DragLayer(c)

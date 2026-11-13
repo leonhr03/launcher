@@ -49,7 +49,7 @@ sleep 0.3
 for x in 180 220 260 300 340 380 412; do adb shell input motionevent MOVE $x 880; done
 sleep 1
 adb shell input motionevent UP 412 880
-sleep 1
+shot 05a-ordner-erstellt 2
 # Ziehen auf freien Platz: Gmail (Reihe 3, Spalte 2) ganz nach unten rechts
 adb shell input motionevent DOWN 412 1185
 sleep 0.3
@@ -59,7 +59,7 @@ adb shell input motionevent UP 920 1800
 shot 05-ordner-und-verschoben 2
 
 # Widget-Galerie
-adb shell input tap 88 196
+adb shell input tap 88 70
 shot 06-widgets 3
 adb shell input keyevent KEYCODE_BACK
 sleep 1
