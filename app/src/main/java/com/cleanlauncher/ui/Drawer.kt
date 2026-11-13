@@ -5,17 +5,18 @@ import android.content.Intent
 import android.graphics.Rect
 import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -37,7 +39,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,20 +60,23 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cleanlauncher.data.AppInfo
 import com.cleanlauncher.data.DrawerStyle
+import com.cleanlauncher.data.Item
+import com.cleanlauncher.data.ItemType
+import com.cleanlauncher.data.categoryName
+import com.cleanlauncher.system.NotificationRepo
 import kotlinx.coroutines.delay
 
 private sealed interface DrawerRow {
@@ -80,8 +84,9 @@ private sealed interface DrawerRow {
     data class App(val app: AppInfo, val label: String) : DrawerRow
 }
 
+/** iOS-App-Mediathek: Kategorien als Kacheln, Suche, alphabetische Liste. */
 @Composable
-fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
+fun AppLibrary(c: LauncherController, apps: List<AppInfo>) {
     val prefs = c.prefs
     val ctx = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
@@ -93,8 +98,7 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
         query = ""
         c.closeDrawer()
     }
-
-    BackHandler { close() }
+    BackHandler(enabled = c.openCategory == null && c.menu == null) { close() }
 
     LaunchedEffect(c.drawerFocus) {
         if (c.drawerFocus) {
@@ -118,7 +122,6 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
             .filter { (app, label) -> label.contains(q, true) || app.packageName.contains(q, true) }
             .sortedBy { (_, label) -> if (label.startsWith(q, true)) 0 else 1 }
     }
-
     val launch: (AppInfo, Rect?) -> Unit = { app, bounds ->
         c.launch(app, bounds)
         close()
@@ -151,20 +154,19 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = prefs.drawerOpacity))
             .pointerInput(Unit) { detectTapGestures { } },
     ) {
+        BlurredBackdrop(prefs.drawerOpacity)
         Column(
             Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .imePadding(),
         ) {
-            // Griff zum Schließen (nach unten ziehen)
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(22.dp)
+                    .height(20.dp)
                     .pointerInput(Unit) {
                         var total = 0f
                         detectVerticalDragGestures(
@@ -179,20 +181,12 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
                     .clickable { close() },
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    Modifier
-                        .size(40.dp, 5.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(Color.White.copy(alpha = 0.45f)),
-                )
+                Box(Modifier.size(38.dp, 5.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.4f)))
             }
 
-            SearchField(
-                value = query,
-                onValueChange = { query = it },
-                focus = focus,
-                onGo = { filtered.firstOrNull()?.let { launch(it.first, null) } },
-            )
+            SearchField(query, { query = it }, focus, "App-Mediathek") {
+                filtered.firstOrNull()?.let { launch(it.first, null) }
+            }
 
             val webSearch: (@Composable () -> Unit)? = if (prefs.drawerWebSearch && query.isNotBlank()) {
                 {
@@ -203,8 +197,7 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
                                 val q = query
                                 try {
                                     ctx.startActivity(
-                                        Intent(Intent.ACTION_WEB_SEARCH)
-                                            .putExtra(SearchManager.QUERY, q)
+                                        Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, q)
                                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                                     )
                                 } catch (e: Exception) {
@@ -225,51 +218,10 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
                 }
             } else null
 
-            if (prefs.drawerStyle == DrawerStyle.LIST) {
-                val rows = remember(filtered, query) {
-                    if (query.isNotBlank()) filtered.map<Pair<AppInfo, String>, DrawerRow> { DrawerRow.App(it.first, it.second) }
-                    else buildList<DrawerRow> {
-                        var last: String? = null
-                        for ((app, label) in filtered) {
-                            val ch = label.firstOrNull()?.uppercaseChar()
-                            val letter = if (ch != null && ch.isLetter()) ch.toString() else "#"
-                            if (letter != last) {
-                                add(DrawerRow.Header(letter))
-                                last = letter
-                            }
-                            add(DrawerRow.App(app, label))
-                        }
-                    }
-                }
-                LazyColumn(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .nestedScroll(closeConnection),
-                    contentPadding = PaddingValues(bottom = 24.dp),
-                ) {
-                    items(rows, key = {
-                        when (it) {
-                            is DrawerRow.Header -> "h:" + it.letter
-                            is DrawerRow.App -> it.app.key
-                        }
-                    }) { row ->
-                        when (row) {
-                            is DrawerRow.Header -> Text(
-                                row.letter,
-                                color = Color.White.copy(alpha = 0.6f),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(start = 22.dp, top = 12.dp, bottom = 2.dp),
-                            )
-                            is DrawerRow.App -> DrawerListRow(c, row.app, row.label, launch)
-                        }
-                    }
-                    if (webSearch != null) item(key = "web") { webSearch() }
-                    item { Spacer(Modifier.navigationBarsPadding()) }
-                }
-            } else {
-                LazyVerticalGrid(
+            when {
+                query.isBlank() && prefs.drawerStyle == DrawerStyle.IOS ->
+                    CategoryTiles(c, visible.map { it.first }, launch, Modifier.weight(1f).nestedScroll(closeConnection))
+                prefs.drawerStyle == DrawerStyle.GRID && query.isBlank() -> LazyVerticalGrid(
                     columns = GridCells.Fixed(prefs.columns),
                     modifier = Modifier
                         .weight(1f)
@@ -278,29 +230,54 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
                         .padding(horizontal = prefs.gridPaddingH.dp),
                     contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
                 ) {
-                    items(filtered, key = { it.first.key }) { (app, _) ->
+                    items(filtered, key = { it.first.key }) { (app, label) ->
                         Box(Modifier.padding(vertical = 10.dp), contentAlignment = Alignment.Center) {
-                            val menuId = "DRAWER:${app.key}"
-                            AppIcon(
-                                app = app,
-                                prefs = prefs,
-                                showLabel = true,
-                                editMode = false,
-                                selected = false,
-                                wobbleSeed = 0,
-                                menuOpen = c.menuKey == menuId,
-                                onDismissMenu = { c.menuKey = null },
-                                onClick = { b -> launch(app, b) },
-                                onLongClick = {
-                                    c.haptic(true)
-                                    c.menuKey = menuId
-                                },
-                                onRemoveBadge = null,
-                            ) { AppMenuItems(c, app, IconLocation.DRAWER) }
+                            LibraryIcon(c, app, label, true, launch)
                         }
                     }
-                    if (webSearch != null) {
-                        item(key = "web", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) { webSearch() }
+                }
+                else -> {
+                    val rows = remember(filtered, query) {
+                        if (query.isNotBlank()) filtered.map<Pair<AppInfo, String>, DrawerRow> { DrawerRow.App(it.first, it.second) }
+                        else buildList<DrawerRow> {
+                            var last: String? = null
+                            for ((app, label) in filtered) {
+                                val ch = label.firstOrNull()?.uppercaseChar()
+                                val letter = if (ch != null && ch.isLetter()) ch.toString() else "#"
+                                if (letter != last) {
+                                    add(DrawerRow.Header(letter))
+                                    last = letter
+                                }
+                                add(DrawerRow.App(app, label))
+                            }
+                        }
+                    }
+                    LazyColumn(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .nestedScroll(closeConnection),
+                        contentPadding = PaddingValues(bottom = 24.dp),
+                    ) {
+                        items(rows, key = {
+                            when (it) {
+                                is DrawerRow.Header -> "h:" + it.letter
+                                is DrawerRow.App -> it.app.key
+                            }
+                        }) { row ->
+                            when (row) {
+                                is DrawerRow.Header -> Text(
+                                    row.letter,
+                                    color = Color.White.copy(alpha = 0.6f),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    modifier = Modifier.padding(start = 22.dp, top = 12.dp, bottom = 2.dp),
+                                )
+                                is DrawerRow.App -> DrawerListRow(c, row.app, row.label, launch)
+                            }
+                        }
+                        if (webSearch != null) item(key = "web") { webSearch() }
+                        item { Spacer(Modifier.navigationBarsPadding()) }
                     }
                 }
             }
@@ -308,45 +285,144 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DrawerListRow(c: LauncherController, app: AppInfo, label: String, launch: (AppInfo, Rect?) -> Unit) {
-    val menuId = "DRAWER:${app.key}"
-    val bounds = remember { arrayOfNulls<Rect>(1) }
-    Box {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .onGloballyPositioned {
-                    val b = it.boundsInWindow()
-                    bounds[0] = Rect(b.left.toInt(), b.top.toInt(), b.right.toInt(), b.bottom.toInt())
-                }
-                .combinedClickable(
-                    onClick = { launch(app, bounds[0]) },
-                    onLongClick = {
-                        c.haptic(true)
-                        c.menuKey = menuId
-                    },
-                )
-                .padding(horizontal = 20.dp, vertical = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconImage(app, c.prefs, sizeDp = 42)
-            Spacer(Modifier.width(16.dp))
-            Text(label, color = Color.White, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+private fun CategoryTiles(c: LauncherController, apps: List<AppInfo>, launch: (AppInfo, Rect?) -> Unit, modifier: Modifier) {
+    val prefs = c.prefs
+    val counts = prefs.launchCounts
+    val groups = remember(apps, counts) {
+        val res = mutableListOf<Pair<String, List<AppInfo>>>()
+        val suggested = apps.sortedByDescending { counts[it.key]?.toIntOrNull() ?: 0 }.take(4)
+        if (suggested.isNotEmpty()) res += "Vorschläge" to suggested
+        val recent = apps.sortedByDescending { it.installTime }.take(8)
+        if (recent.isNotEmpty()) res += "Zuletzt hinzugefügt" to recent
+        apps.groupBy { categoryName(it) }.toList()
+            .sortedWith(compareBy({ it.first == "Weitere" }, { -it.second.size }))
+            .forEach { (name, list) ->
+                res += name to list.sortedByDescending { counts[it.key]?.toIntOrNull() ?: 0 }
+            }
+        res
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 40.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        items(groups, key = { it.first }) { (name, list) ->
+            CategoryTile(c, name, list, launch)
         }
-        DropdownMenu(
-            expanded = c.menuKey == menuId,
-            onDismissRequest = { c.menuKey = null },
-            offset = androidx.compose.ui.unit.DpOffset(70.dp, 0.dp),
-        ) {
-            AppMenuItems(c, app, IconLocation.DRAWER)
-        }
+        item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.navigationBarsPadding()) }
     }
 }
 
 @Composable
-private fun SearchField(value: String, onValueChange: (String) -> Unit, focus: FocusRequester, onGo: () -> Unit) {
+private fun CategoryTile(c: LauncherController, name: String, apps: List<AppInfo>, launch: (AppInfo, Rect?) -> Unit) {
+    val prefs = c.prefs
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        BoxWithConstraints(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .frosted(RoundedCornerShape(26.dp), Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.14f), prefs.glass)
+                .padding(10.dp),
+        ) {
+            val cell = maxWidth / 2
+            val big = (cell.value * 0.78f).toInt()
+            val bigCount = if (apps.size <= 4) 4 else 3
+            Column {
+                for (r in 0 until 2) {
+                    Row {
+                        for (col in 0 until 2) {
+                            val i = r * 2 + col
+                            Box(Modifier.size(cell), contentAlignment = Alignment.Center) {
+                                if (i < bigCount) {
+                                    apps.getOrNull(i)?.let { app -> LibraryIcon(c, app, null, false, launch, big) }
+                                } else {
+                                    // Mini-Gruppe: öffnet die ganze Kategorie
+                                    Box(
+                                        Modifier
+                                            .size(big.dp)
+                                            .clip(RoundedCornerShape(22))
+                                            .clickable { c.openCategory = name to apps.map { it.key } },
+                                    ) {
+                                        Column(Modifier.fillMaxSize().padding(2.dp)) {
+                                            for (rr in 0 until 2) Row(Modifier.weight(1f)) {
+                                                for (cc in 0 until 2) Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                                    apps.getOrNull(3 + rr * 2 + cc)?.let { IconImage(it, prefs, sizeDp = (big * 0.42f).toInt()) }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(name, color = Color.White, fontSize = 12.sp, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun LibraryIcon(
+    c: LauncherController,
+    app: AppInfo,
+    label: String?,
+    showLabel: Boolean,
+    launch: (AppInfo, Rect?) -> Unit,
+    sizeDp: Int = c.prefs.iconSize,
+) {
+    val bounds = remember { arrayOfNulls<Rect>(1) }
+    val pressed = remember { mutableStateOf(false) }
+    IconCell(
+        prefs = c.prefs,
+        label = label ?: c.labelOf(app),
+        showLabel = showLabel,
+        editMode = false,
+        pressed = pressed.value,
+        hidden = false,
+        wobbleSeed = 0,
+        badge = NotificationRepo.counts[app.packageName] ?: 0,
+        onRemove = null,
+        modifier = Modifier.iconGestures(
+            c, "lib:" + app.key, bounds, pressed, null, DragSource.DESKTOP, null,
+            onTap = { launch(app, bounds[0]) },
+            onLongPress = { c.showMenu(MenuTarget.App(app, c.itemForApp(app.key), null, true), bounds[0]) },
+        ),
+    ) { IconImage(app, c.prefs, sizeDp = sizeDp) }
+}
+
+@Composable
+private fun DrawerListRow(c: LauncherController, app: AppInfo, label: String, launch: (AppInfo, Rect?) -> Unit) {
+    val bounds = remember { arrayOfNulls<Rect>(1) }
+    val pressed = remember { mutableStateOf(false) }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .iconGestures(
+                c, "row:" + app.key, bounds, pressed, null, DragSource.DESKTOP, null,
+                onTap = { launch(app, bounds[0]) },
+                onLongPress = { c.showMenu(MenuTarget.App(app, c.itemForApp(app.key), null, true), bounds[0]) },
+            )
+            .background(if (pressed.value) Color.White.copy(alpha = 0.08f) else Color.Transparent)
+            .padding(horizontal = 20.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconImage(app, c.prefs, sizeDp = 42)
+        Spacer(Modifier.width(16.dp))
+        Text(label, color = Color.White, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        val n = NotificationRepo.counts[app.packageName] ?: 0
+        if (n > 0 && c.prefs.badges) Badge(n)
+    }
+}
+
+@Composable
+fun SearchField(value: String, onValueChange: (String) -> Unit, focus: FocusRequester?, placeholder: String, onGo: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -360,7 +436,7 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit, focus: F
         Spacer(Modifier.width(8.dp))
         Box(Modifier.weight(1f)) {
             if (value.isEmpty()) {
-                Text("App-Mediathek durchsuchen", color = Color.White.copy(alpha = 0.55f), fontSize = 17.sp)
+                Text(placeholder, color = Color.White.copy(alpha = 0.55f), fontSize = 17.sp)
             }
             BasicTextField(
                 value = value,
@@ -372,7 +448,7 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit, focus: F
                 keyboardActions = KeyboardActions(onGo = { onGo() }),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .focusRequester(focus),
+                    .then(if (focus != null) Modifier.focusRequester(focus) else Modifier),
             )
         }
         if (value.isNotEmpty()) {
@@ -387,3 +463,6 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit, focus: F
         }
     }
 }
+
+@Suppress("unused")
+private fun unusedItem(): Item = Item(0, ItemType.APP)

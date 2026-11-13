@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.cleanlauncher.data.AppRepository
+import com.cleanlauncher.data.WallpaperRepo
 import com.cleanlauncher.ui.SettingsScreen
 
 class SettingsActivity : ComponentActivity() {
@@ -12,6 +13,7 @@ class SettingsActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         AppRepository.init(this)
+        WallpaperRepo.init(this)
         setContent {
             SettingsScreen(onFinish = { finish() })
         }

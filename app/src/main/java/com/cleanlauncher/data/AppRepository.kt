@@ -44,8 +44,28 @@ data class AppInfo(
     val icon: ImageBitmap,
     /** Randlose Version (nur bei adaptiven Symbolen) – wird für eigene Formen benutzt. */
     val fullBleed: ImageBitmap?,
+    val category: Int = -1,
+    val installTime: Long = 0L,
 ) {
     val packageName: String get() = component.packageName
+}
+
+fun categoryName(app: AppInfo): String {
+    val c = app.category
+    val sys = app.packageName.startsWith("com.android.") || app.packageName.startsWith("com.miui.") ||
+        app.packageName.startsWith("com.xiaomi.") || app.packageName.startsWith("com.google.android.")
+    return when (c) {
+        android.content.pm.ApplicationInfo.CATEGORY_GAME -> "Spiele"
+        android.content.pm.ApplicationInfo.CATEGORY_AUDIO -> "Musik & Audio"
+        android.content.pm.ApplicationInfo.CATEGORY_VIDEO -> "Unterhaltung"
+        android.content.pm.ApplicationInfo.CATEGORY_IMAGE -> "Fotos & Kreativität"
+        android.content.pm.ApplicationInfo.CATEGORY_SOCIAL -> "Soziale Netze"
+        android.content.pm.ApplicationInfo.CATEGORY_NEWS -> "Nachrichten"
+        android.content.pm.ApplicationInfo.CATEGORY_MAPS -> "Reisen & Navigation"
+        android.content.pm.ApplicationInfo.CATEGORY_PRODUCTIVITY -> "Produktivität"
+        android.content.pm.ApplicationInfo.CATEGORY_ACCESSIBILITY -> "Dienstprogramme"
+        else -> if (sys) "Dienstprogramme" else "Weitere"
+    }
 }
 
 object AppRepository {
@@ -58,6 +78,7 @@ object AppRepository {
         private set
 
     private lateinit var ctx: Context
+    fun appFor(pkg: String): AppInfo? = apps.firstOrNull { it.packageName == pkg }
     private lateinit var launcherApps: LauncherApps
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var job: Job? = null
@@ -128,6 +149,8 @@ object AppRepository {
             originalLabel = info.label?.toString()?.trim().orEmpty().ifEmpty { info.componentName.packageName },
             icon = drawable.toBitmap(ICON_PX).asImageBitmap(),
             fullBleed = (drawable as? AdaptiveIconDrawable)?.fullBleed(ICON_PX)?.asImageBitmap(),
+            category = info.applicationInfo?.category ?: -1,
+            installTime = info.firstInstallTime,
         )
     } catch (e: Exception) {
         null
@@ -157,6 +180,9 @@ object AppRepository {
 
     fun launch(context: Context, app: AppInfo, view: View?, bounds: Rect?, animate: Boolean) {
         try {
+            val prefs = Prefs.get(context)
+            val counts = prefs.launchCounts
+            prefs.launchCounts = counts + (app.key to ((counts[app.key]?.toIntOrNull() ?: 0) + 1).toString())
             val opts = if (animate && view != null && bounds != null) {
                 val loc = IntArray(2)
                 view.getLocationOnScreen(loc)
@@ -186,6 +212,12 @@ object AppRepository {
         } catch (e: ActivityNotFoundException) {
             openAppInfo(app)
         }
+    }
+
+    fun shortcutIcon(s: ShortcutInfo): ImageBitmap? = try {
+        launcherApps.getShortcutIconDrawable(s, ctx.resources.displayMetrics.densityDpi)?.toBitmap(96)?.asImageBitmap()
+    } catch (e: Exception) {
+        null
     }
 
     fun shortcuts(app: AppInfo): List<ShortcutInfo> = try {

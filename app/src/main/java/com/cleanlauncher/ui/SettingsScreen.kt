@@ -65,6 +65,7 @@ import com.cleanlauncher.data.IconShape
 import com.cleanlauncher.data.Prefs
 import com.cleanlauncher.system.SystemActions
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 private class Palette(val bg: Color, val card: Color, val text: Color, val sub: Color, val accent: Color, val divider: Color)
 
@@ -82,9 +83,7 @@ fun SettingsScreen(onFinish: () -> Unit) {
     } else {
         Palette(Color(0xFFF2F2F7), Color.White, Color.Black, Color(0xFF6D6D72), Color(0xFF007AFF), Color(0xFFD1D1D6))
     }
-    MaterialTheme(
-        colorScheme = if (dark) darkColorScheme(primary = palette.accent) else lightColorScheme(primary = palette.accent),
-    ) {
+    LauncherTheme(Prefs.get(LocalContext.current), dark) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPalette provides palette) {
             var screen by remember { mutableStateOf(Screen.MAIN) }
             BackHandler(screen != Screen.MAIN) { screen = Screen.MAIN }
@@ -146,6 +145,10 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
             }
 
             Preview(prefs)
+
+            AppearanceSection(prefs)
+            WallpaperSection(prefs)
+            LockSection(prefs)
 
             Section("Raster")
             Group {
@@ -216,13 +219,7 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
 
             Section("Startbildschirm")
             Group {
-                SwitchRow("Uhr & Datum oben (Widget)", prefs.clockWidget) { prefs.clockWidget = it }
-                if (prefs.clockWidget) {
-                    Divider()
-                    SwitchRow("24-Stunden-Format", prefs.clock24h) { prefs.clock24h = it }
-                    Divider()
-                    ColorRow("Farbe der Uhr", prefs.clockColor) { prefs.clockColor = it }
-                }
+                SwitchRow("24-Stunden-Uhr (Widgets & Sperrbildschirm)", prefs.clock24h) { prefs.clock24h = it }
                 Divider()
                 SwitchRow("Seitenpunkte anzeigen", prefs.showPageIndicator) { prefs.showPageIndicator = it }
                 if (prefs.showPageIndicator) {
@@ -239,8 +236,6 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
                 SwitchRow("Hochformat sperren", prefs.lockPortrait) { prefs.lockPortrait = it }
                 Divider()
                 SwitchRow("Neue Apps automatisch hinzufügen", prefs.autoAddNewApps) { prefs.autoAddNewApps = it }
-                Divider()
-                ActionRow("Hintergrundbild ändern") { SystemActions.pickWallpaper(ctx) }
             }
 
             Section("Gesten")
@@ -279,8 +274,14 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
                 ActionRow("Ausgeblendete Apps", "${prefs.hiddenApps.size} ausgeblendet") { open(Screen.HIDDEN) }
                 Divider()
                 ActionRow("Umbenannte Apps", "${prefs.customLabels.size} umbenannt") { open(Screen.NAMES) }
+                Divider()
+                ActionRow(
+                    "Mitteilungszugriff",
+                    if (com.cleanlauncher.system.NotificationRepo.hasAccess(ctx)) "Aktiv – rote Badges & Mitteilungen auf dem Sperrbildschirm"
+                    else "Nötig für rote Badges und Mitteilungen auf dem Sperrbildschirm",
+                ) { openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
             }
-            Footer("Apps umbenennen, ausblenden, ins Dock legen oder entfernen: lange auf ein App-Symbol drücken. Anordnen: lange auf eine freie Fläche drücken (Bearbeitungsmodus), dann zwei Apps nacheinander antippen.")
+            Footer("Lange auf eine App drücken: Menü (umbenennen, Dock, entfernen …). Lange drücken und ziehen: verschieben. App auf eine andere App ziehen: Ordner. Im Bearbeitungsmodus oben links „+“: Widgets hinzufügen.")
 
             Section("Zurücksetzen")
             Group {
@@ -299,6 +300,7 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     prefs.resetEverything()
+                    com.cleanlauncher.data.Workspace.get(ctx).reset()
                     resetDialog = false
                 }) { Text("Zurücksetzen") }
             },
@@ -369,8 +371,12 @@ private fun HiddenAppsScreen(onBack: () -> Unit) {
                         .clickable {
                             if (hidden) {
                                 prefs.hiddenApps = prefs.hiddenApps - app.key
-                                if (app.key !in prefs.homeOrder && app.key !in prefs.dockApps) {
-                                    prefs.homeOrder = prefs.homeOrder + app.key
+                                val ws = com.cleanlauncher.data.Workspace.get(ctx)
+                                if (!ws.contains(app.key)) {
+                                    val hiddenNow = prefs.hiddenApps
+                                    ws.addApp(app.key, prefs.columns, prefs.rows, { i ->
+                                        i.type != com.cleanlauncher.data.ItemType.APP || (i.appKey !in hiddenNow)
+                                    })
                                 }
                             } else {
                                 prefs.hiddenApps = prefs.hiddenApps + app.key
@@ -639,3 +645,211 @@ private fun ColorRow(title: String, value: Int, onChange: (Int) -> Unit) {
 
 @Suppress("unused")
 private fun Color.argb() = toArgb()
+
+
+// ======================= Neue Bereiche =======================
+
+private fun openSafe(ctx: android.content.Context, intent: android.content.Intent, fallback: android.content.Intent? = null) {
+    try {
+        ctx.startActivity(intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (e: Exception) {
+        if (fallback != null) runCatching { ctx.startActivity(fallback.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+}
+
+private fun appDetails(ctx: android.content.Context) = android.content.Intent(
+    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+    android.net.Uri.parse("package:" + ctx.packageName),
+)
+
+/** Erhöht sich bei jedem Zurückkehren in die Einstellungen (damit Berechtigungs-Status aktuell ist). */
+@Composable
+private fun resumeTick(): Int {
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    androidx.compose.runtime.DisposableEffect(owner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) tick++
+        }
+        owner.lifecycle.addObserver(obs)
+        onDispose { owner.lifecycle.removeObserver(obs) }
+    }
+    return tick
+}
+
+@Composable
+private fun AppearanceSection(prefs: Prefs) {
+    Section("Aussehen (iOS)")
+    Group {
+        SwitchRow("iOS-ähnliche Schrift", prefs.iosFont, "Inter – fast wie SF Pro") { prefs.iosFont = it }
+        Divider()
+        SwitchRow("Glas-Effekt", prefs.glass, "Dock, Ordner, Menüs & Widgets milchglasartig") { prefs.glass = it }
+        Divider()
+        SwitchRow("„Suchen“-Taste über dem Dock", prefs.searchPill, "Wie bei iOS 17 – beim Wischen erscheinen die Seitenpunkte") { prefs.searchPill = it }
+        Divider()
+        SwitchRow("Rote Badges (Mitteilungen)", prefs.badges) { prefs.badges = it }
+        Divider()
+        ChoiceRow("Widget-Stil", com.cleanlauncher.data.WidgetStyle.entries, prefs.widgetStyle, { it.title }) { prefs.widgetStyle = it }
+        Divider()
+        IntSlider("Widget-Ecken", prefs.widgetCorner, 0..40, suffix = " dp") { prefs.widgetCorner = it }
+    }
+}
+
+@Composable
+private fun WallpaperSection(prefs: Prefs) {
+    val ctx = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    @Suppress("UNUSED_VARIABLE") val tick = resumeTick()
+    var pending by remember { mutableStateOf<android.net.Uri?>(null) }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> pending = uri }
+    val hasAccess = WallpaperRepoAccess.has(tick)
+
+    Section("Hintergrundbild")
+    Group {
+        ActionRow("Bild aus der Galerie wählen", "Für Startbildschirm und/oder Sperrbildschirm – aktiviert den Glas-Effekt") {
+            picker.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly))
+        }
+        Divider()
+        ActionRow(
+            "Aktuelles Hintergrundbild übernehmen",
+            if (hasAccess) "Aktiv – dein jetziges Hintergrundbild wird verwendet" else "Braucht „Zugriff auf alle Dateien“ (nur zum Lesen des Hintergrunds)",
+        ) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R && !hasAccess) {
+                openSafe(
+                    ctx,
+                    android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        android.net.Uri.parse("package:" + ctx.packageName),
+                    ),
+                    android.content.Intent(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+                )
+            } else {
+                com.cleanlauncher.data.WallpaperRepo.reload()
+            }
+        }
+        Divider()
+        ActionRow("System-Hintergrundauswahl") { SystemActions.pickWallpaper(ctx) }
+    }
+    if (!com.cleanlauncher.data.WallpaperRepo.available) {
+        Footer("Ohne Hintergrundbild-Zugriff wirken Dock & Ordner halbtransparent statt milchglasartig.")
+    }
+
+    pending?.let { uri ->
+        fun apply(home: Boolean, lock: Boolean) {
+            pending = null
+            scope.launch {
+                val ok = com.cleanlauncher.data.WallpaperRepo.setFromUri(ctx, uri, home, lock)
+                android.widget.Toast.makeText(ctx, if (ok) "Hintergrundbild gesetzt" else "Konnte Bild nicht setzen", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+        IosAlert(
+            title = "Hintergrundbild verwenden für",
+            message = null,
+            buttons = listOf(
+                AlertButton("Startbildschirm") { apply(true, false) },
+                AlertButton("Sperrbildschirm") { apply(false, true) },
+                AlertButton("Beide", bold = true) { apply(true, true) },
+                AlertButton("Abbrechen") { pending = null },
+            ),
+            onDismiss = { pending = null },
+        )
+    }
+}
+
+private object WallpaperRepoAccess {
+    @Suppress("UNUSED_PARAMETER")
+    fun has(tick: Int) = com.cleanlauncher.data.WallpaperRepo.hasFileAccess()
+}
+
+@Composable
+private fun LockSection(prefs: Prefs) {
+    val ctx = LocalContext.current
+    val tick = resumeTick()
+    val overlay = remember(tick) { android.provider.Settings.canDrawOverlays(ctx) }
+    val notif = remember(tick) { com.cleanlauncher.system.NotificationRepo.hasAccess(ctx) }
+    val postPerm = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { }
+    val isXiaomi = remember { android.os.Build.MANUFACTURER.equals("Xiaomi", true) || android.os.Build.BRAND.equals("Redmi", true) || android.os.Build.BRAND.equals("POCO", true) }
+
+    Section("Sperrbildschirm (iOS-Stil)")
+    Group {
+        SwitchRow("iOS-Sperrbildschirm", prefs.lockEnabled, "Große Uhr, Mitteilungen, Taschenlampe & Kamera") {
+            prefs.lockEnabled = it
+            if (it && android.os.Build.VERSION.SDK_INT >= 33) postPerm.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            com.cleanlauncher.lock.LockService.sync(ctx)
+        }
+        if (prefs.lockEnabled) {
+            Divider()
+            ActionRow(
+                if (overlay) "✓ Über anderen Apps anzeigen" else "① Über anderen Apps anzeigen erlauben",
+                "Damit der Sperrbildschirm beim Ausschalten erscheinen darf",
+                highlight = !overlay,
+            ) {
+                openSafe(
+                    ctx,
+                    android.content.Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + ctx.packageName)),
+                    appDetails(ctx),
+                )
+            }
+            if (isXiaomi) {
+                Divider()
+                ActionRow(
+                    "② Xiaomi: „Auf Sperrbildschirm anzeigen“",
+                    "Und „Pop-up-Fenster im Hintergrund anzeigen“ erlauben",
+                    highlight = true,
+                ) {
+                    openSafe(
+                        ctx,
+                        android.content.Intent("miui.intent.action.APP_PERM_EDITOR")
+                            .setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")
+                            .putExtra("extra_pkgname", ctx.packageName),
+                        appDetails(ctx),
+                    )
+                }
+                Divider()
+                ActionRow("③ Xiaomi: Autostart erlauben", "Damit der Sperrbildschirm nach dem Neustart wieder aktiv ist", highlight = true) {
+                    openSafe(
+                        ctx,
+                        android.content.Intent().setComponent(
+                            android.content.ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"),
+                        ),
+                        appDetails(ctx),
+                    )
+                }
+                Divider()
+                ActionRow("④ Akku: „Keine Einschränkungen“", "Sonst beendet MIUI den Sperrbildschirm im Hintergrund") {
+                    openSafe(ctx, appDetails(ctx))
+                }
+            }
+            Divider()
+            ActionRow(
+                if (notif) "✓ Mitteilungszugriff" else "Mitteilungszugriff erlauben",
+                "Für Mitteilungen auf dem Sperrbildschirm",
+            ) { openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
+            Divider()
+            SwitchRow("Mitteilungen anzeigen", prefs.lockNotifications) { prefs.lockNotifications = it }
+            if (prefs.lockNotifications) {
+                Divider()
+                SwitchRow("Inhalte erst nach Entsperren zeigen", prefs.lockHideContent, "Vor Fingerabdruck/PIN nur App-Name sichtbar") { prefs.lockHideContent = it }
+            }
+            Divider()
+            SwitchRow("Taschenlampe-Taste", prefs.lockTorch) { prefs.lockTorch = it }
+            Divider()
+            SwitchRow("Kamera-Taste", prefs.lockCamera) { prefs.lockCamera = it }
+            Divider()
+            ColorRow("Farbe der Uhr", prefs.lockClockColor) { prefs.lockClockColor = it }
+            Divider()
+            FloatSlider("Hintergrund abdunkeln", prefs.lockDim, 0f..0.7f, step = 0.01f, percent = true) { prefs.lockDim = it }
+            Divider()
+            ActionRow("Vorschau anzeigen") {
+                openSafe(ctx, android.content.Intent(ctx, com.cleanlauncher.lock.LockScreenActivity::class.java))
+            }
+        }
+    }
+    if (prefs.lockEnabled) {
+        Footer("Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone.")
+    }
+}

@@ -2,44 +2,78 @@
 # Installiert den Launcher im Emulator und macht Screenshots.
 set -x
 OUT=screenshots
-mkdir -p $OUT
+rm -rf $OUT; mkdir -p $OUT
+PKG=com.cleanlauncher
 APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+adb root || true
+sleep 3
 adb install -r "$APK"
 adb shell settings put global window_animation_scale 0
 adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
-adb shell cmd package set-home-activity com.cleanlauncher/.MainActivity
+# Rechte, die man auf dem Handy per Einstellungen gibt (für Glas-Effekt + Badges)
+adb shell appops set $PKG MANAGE_EXTERNAL_STORAGE allow
+adb shell cmd notification allow_listener $PKG/$PKG.system.NotificationService
+adb shell cmd package set-home-activity $PKG/.MainActivity
 sleep 2
-shot() { sleep "${2:-4}"; adb exec-out screencap -p > "$OUT/$1.png"; }
+shot() { sleep "${2:-3}"; adb exec-out screencap -p > "$OUT/$1.png"; }
 
-# Startbildschirm
 adb shell input keyevent KEYCODE_HOME
-shot 1-startbildschirm 8
-# Zweite Seite
-adb shell input swipe 900 1200 150 1200 250
-shot 2-seite-2 3
+sleep 8
+# Testmitteilungen (für Badges & Sperrbildschirm)
+adb shell cmd notification post -S bigtext -t "Lisa" chat1 "Kommst du heute noch vorbei?"
+adb shell cmd notification post -S bigtext -t "Mama" chat2 "Essen ist um 19 Uhr fertig"
+adb shell am force-stop $PKG
 adb shell input keyevent KEYCODE_HOME
+shot 01-startbildschirm 8
+
+# Ordner erstellen: App auf andere App ziehen
+adb shell input draganddrop 159 860 413 860 1500
 sleep 2
-# App-Mediathek (nach oben wischen)
-adb shell input swipe 540 1500 540 600 200
-shot 3-app-mediathek 3
+adb shell input tap 540 120
 adb shell input keyevent KEYCODE_BACK
-sleep 2
-# Kontextmenü (lange auf erstes Symbol drücken)
-adb shell input swipe 158 250 158 250 900
-shot 4-app-menue 3
-adb shell input keyevent KEYCODE_BACK
-sleep 2
-# Bearbeitungsmodus (lange auf freie Fläche im Dock-Bereich drücken)
-adb shell input swipe 15 1000 15 1000 900
-shot 5-bearbeiten 3
+shot 02-ordner-erstellt 2
+adb shell input tap 413 840
+shot 03-ordner-offen 2
 adb shell input keyevent KEYCODE_BACK
 sleep 1
+
+# Kontextmenü
+adb shell input swipe 667 840 667 840 1000
+shot 04-app-menue 2
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+
+# App-Mediathek
+adb shell input swipe 540 1500 540 500 200
+shot 05-app-mediathek 3
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+
+# Bearbeitungsmodus (auf Seite 2 lange auf freie Fläche drücken)
+adb shell input swipe 950 1300 100 1300 250
+sleep 2
+adb shell input swipe 540 1650 540 1650 1000
+shot 06-bearbeiten 2
+# Widget-Galerie
+adb shell input tap 89 126
+shot 07-widgets 3
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+adb shell input keyevent KEYCODE_HOME
+sleep 1
+adb shell input keyevent KEYCODE_HOME
+sleep 2
+
+# Sperrbildschirm
+adb shell am start -n $PKG/.lock.LockScreenActivity
+shot 08-sperrbildschirm 4
+adb shell input keyevent KEYCODE_HOME
+sleep 2
+
 # Einstellungen
-adb shell am start -n com.cleanlauncher/.SettingsActivity
-shot 6-einstellungen 5
+adb shell am start -n $PKG/.SettingsActivity
+shot 09-einstellungen 4
 adb shell input swipe 540 1700 540 500 400
-shot 7-einstellungen-2 3
-adb shell input swipe 540 1700 540 400 400
-shot 8-einstellungen-3 3
+shot 10-einstellungen-2 2
 ls -la $OUT

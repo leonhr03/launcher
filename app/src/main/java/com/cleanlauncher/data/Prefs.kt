@@ -15,6 +15,12 @@ enum class IconShape(val title: String) {
     TEARDROP("Tropfen"),
 }
 
+enum class WidgetStyle(val title: String) {
+    LIGHT("Hell (iOS)"),
+    DARK("Dunkel"),
+    GLASS("Glas"),
+}
+
 enum class GestureAction(val title: String) {
     NONE("Nichts"),
     APP_LIBRARY("App-Mediathek öffnen"),
@@ -28,6 +34,7 @@ enum class GestureAction(val title: String) {
 }
 
 enum class DrawerStyle(val title: String) {
+    IOS("App-Mediathek (Kategorien, wie iOS)"),
     LIST("Liste (alphabetisch)"),
     GRID("Raster"),
 }
@@ -106,6 +113,14 @@ class Prefs private constructor(context: Context) {
     var gridPaddingH by int("grid_padding_h", 12)
     var gridPaddingTop by int("grid_padding_top", 8)
 
+    // ---------- Aussehen ----------
+    var iosFont by bool("ios_font", true)
+    var glass by bool("glass", true)
+    var searchPill by bool("search_pill", true)
+    var badges by bool("badges", true)
+    var widgetStyle by enum("widget_style", WidgetStyle.LIGHT)
+    var widgetCorner by int("widget_corner", 22)
+
     // ---------- App-Symbole ----------
     var iconSize by int("icon_size", 56)
     var iconShape by enum("icon_shape", IconShape.SQUIRCLE)
@@ -127,21 +142,28 @@ class Prefs private constructor(context: Context) {
     var dockBackground by bool("dock_background", true)
     var dockOpacity by float("dock_opacity", 0.22f)
     var dockColor by int("dock_color", 0xFFFFFFFF.toInt())
-    var dockCorner by int("dock_corner", 32)
-    var dockMargin by int("dock_margin", 12)
+    var dockCorner by int("dock_corner", 34)
+    var dockMargin by int("dock_margin", 10)
     var dockShowLabels by bool("dock_labels", false)
 
     // ---------- Startbildschirm ----------
     var showPageIndicator by bool("page_indicator", true)
-    var clockWidget by bool("clock_widget", false)
     var clock24h by bool("clock_24h", true)
-    var clockColor by int("clock_color", 0xFFFFFFFF.toInt())
     var wallpaperDim by float("wallpaper_dim", 0f)
     var hideStatusBar by bool("hide_status_bar", false)
     var darkStatusIcons by bool("dark_status_icons", false)
     var autoAddNewApps by bool("auto_add_new_apps", true)
     var lockPortrait by bool("lock_portrait", true)
     var pageIndicatorColor by int("page_indicator_color", 0xFFFFFFFF.toInt())
+
+    // ---------- Sperrbildschirm ----------
+    var lockEnabled by bool("lock_enabled", false)
+    var lockNotifications by bool("lock_notifications", true)
+    var lockHideContent by bool("lock_hide_content", true)
+    var lockTorch by bool("lock_torch", true)
+    var lockCamera by bool("lock_camera", true)
+    var lockClockColor by int("lock_clock_color", 0xFFFFFFFF.toInt())
+    var lockDim by float("lock_dim", 0.1f)
 
     // ---------- Gesten ----------
     var swipeUp by enum("gesture_swipe_up", GestureAction.APP_LIBRARY)
@@ -151,9 +173,9 @@ class Prefs private constructor(context: Context) {
     var haptics by bool("haptics", true)
 
     // ---------- App-Mediathek ----------
-    var drawerStyle by enum("drawer_style", DrawerStyle.LIST)
+    var drawerStyle by enum("drawer_style", DrawerStyle.IOS)
     var drawerAutoKeyboard by bool("drawer_auto_keyboard", false)
-    var drawerOpacity by float("drawer_opacity", 0.65f)
+    var drawerOpacity by float("drawer_opacity", 0.35f)
     var drawerBlur by bool("drawer_blur", true)
     var drawerWebSearch by bool("drawer_web_search", true)
 
@@ -163,7 +185,7 @@ class Prefs private constructor(context: Context) {
     var hiddenApps by list("hidden_apps")
     var knownApps by list("known_apps")
     var customLabels by map("custom_labels")
-    var initialized by bool("initialized", false, layout = true)
+    var launchCounts by map("launch_counts")
 
     fun labelFor(key: String, original: String): String = customLabels[key] ?: original
 

@@ -1,22 +1,18 @@
 package com.cleanlauncher.ui
 
-import android.graphics.Rect
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -25,13 +21,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
@@ -44,8 +40,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -107,92 +101,112 @@ fun IconImage(app: AppInfo, prefs: Prefs, sizeDp: Int = prefs.iconSize, modifier
 fun labelStyle(prefs: Prefs) = TextStyle(
     color = Color(prefs.labelColor),
     fontSize = prefs.labelSize.sp,
+    fontFamily = appFont(prefs),
     fontWeight = if (prefs.labelBold) FontWeight.SemiBold else FontWeight.Normal,
     textAlign = TextAlign.Center,
-    shadow = if (prefs.labelShadow) Shadow(Color.Black.copy(alpha = 0.55f), Offset(0f, 1.5f), 5f) else null,
+    shadow = if (prefs.labelShadow) Shadow(Color.Black.copy(alpha = 0.45f), Offset(0f, 1f), 4f) else null,
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+/** iOS-Ordnersymbol: Glasfläche mit 3×3 Mini-Symbolen. */
 @Composable
-fun AppIcon(
-    app: AppInfo,
+fun FolderIcon(apps: List<AppInfo>, prefs: Prefs, sizeDp: Int = prefs.iconSize) {
+    val shape = iconShapeOf(
+        if (prefs.iconShape == IconShape.ORIGINAL) IconShape.SQUIRCLE else prefs.iconShape,
+        prefs.iconCornerPercent,
+    )
+    val mini = (sizeDp * 0.22f)
+    val gap = (sizeDp * 0.06f)
+    Box(
+        Modifier
+            .size(sizeDp.dp)
+            .frosted(shape, Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.28f), prefs.glass),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(gap.dp)) {
+            for (r in 0 until 3) {
+                Row(horizontalArrangement = Arrangement.spacedBy(gap.dp)) {
+                    for (c in 0 until 3) {
+                        val app = apps.getOrNull(r * 3 + c)
+                        if (app != null) {
+                            Image(
+                                bitmap = if (prefs.iconShape != IconShape.ORIGINAL && app.fullBleed != null) app.fullBleed else app.icon,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(mini.dp)
+                                    .clip(if (prefs.iconShape == IconShape.ORIGINAL) RectangleShape else RoundedCornerShape(24)),
+                            )
+                        } else {
+                            Spacer(Modifier.size(mini.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Darstellung einer Zelle: Symbol (beliebiger Inhalt) + Name + Badge + Wackeln im Bearbeitungsmodus.
+ * Gesten werden vom Aufrufer über [modifier] gesetzt.
+ */
+@Composable
+fun IconCell(
     prefs: Prefs,
+    label: String,
     showLabel: Boolean,
     editMode: Boolean,
-    selected: Boolean,
+    pressed: Boolean,
+    hidden: Boolean,
     wobbleSeed: Int,
-    menuOpen: Boolean,
-    onDismissMenu: () -> Unit,
-    onClick: (Rect?) -> Unit,
-    onLongClick: () -> Unit,
-    onRemoveBadge: (() -> Unit)?,
+    badge: Int,
+    onRemove: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    menu: @Composable ColumnScope.() -> Unit,
+    icon: @Composable () -> Unit,
 ) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        if ((pressed && prefs.pressAnimation) || selected) 0.88f else 1f,
-        animationSpec = tween(120),
+        if (pressed && prefs.pressAnimation && !editMode) 0.9f else 1f,
+        animationSpec = tween(110),
         label = "press",
     )
-    val bounds = remember { arrayOfNulls<Rect>(1) }
-
     val rotation = if (editMode) {
         val t = rememberInfiniteTransition(label = "wobble")
         val r by t.animateFloat(
-            initialValue = -1.6f,
-            targetValue = 1.6f,
-            animationSpec = infiniteRepeatable(tween(130 + (wobbleSeed % 4) * 12), RepeatMode.Reverse),
+            initialValue = -1.5f,
+            targetValue = 1.5f,
+            animationSpec = infiniteRepeatable(tween(125 + (abs(wobbleSeed) % 4) * 10), RepeatMode.Reverse),
             label = "wobble",
         )
         if (wobbleSeed % 2 == 0) r else -r
     } else 0f
 
     Column(
-        modifier = modifier
-            .onGloballyPositioned {
-                val b = it.boundsInWindow()
-                bounds[0] = Rect(b.left.toInt(), b.top.toInt(), b.right.toInt(), b.bottom.toInt())
-            }
-            .combinedClickable(
-                interactionSource = interaction,
-                indication = null,
-                onClick = { onClick(bounds[0]) },
-                onLongClick = onLongClick,
-            ),
+        modifier.alpha(if (hidden) 0f else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box {
-            Box(Modifier.rotate(rotation).scale(scale)) {
-                IconImage(
-                    app, prefs,
-                    modifier = if (selected) Modifier.border(2.dp, Color.White, iconShapeOf(
-                        if (prefs.iconShape == IconShape.ORIGINAL) IconShape.SQUIRCLE else prefs.iconShape,
-                        prefs.iconCornerPercent,
-                    )) else Modifier,
-                )
+        Box(Modifier.rotate(rotation).scale(scale)) {
+            icon()
+            if (badge > 0 && prefs.badges && !editMode) {
+                Badge(badge, Modifier.align(Alignment.TopEnd).offset(8.dp, (-6).dp))
             }
-            if (editMode && onRemoveBadge != null) {
+            if (editMode && onRemove != null) {
                 Box(
                     Modifier
                         .align(Alignment.TopStart)
-                        .offset((-6).dp, (-6).dp)
+                        .offset((-7).dp, (-7).dp)
                         .size(22.dp)
                         .clip(CircleShape)
-                        .background(Color(0xE6555555))
-                        .combinedClickable(onClick = onRemoveBadge),
+                        .frosted(CircleShape, Color(0x99555555), Color(0xE6555555), prefs.glass)
+                        .clickable(onClick = onRemove),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(Modifier.size(10.dp, 2.dp).background(Color.White))
                 }
             }
-            DropdownMenu(expanded = menuOpen, onDismissRequest = onDismissMenu, content = menu)
         }
         if (showLabel) {
             Spacer(Modifier.height(5.dp))
             Text(
-                text = prefs.labelFor(app.key, app.originalLabel),
+                text = label,
                 style = labelStyle(prefs),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
