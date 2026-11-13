@@ -1,3 +1,0 @@
---------- beginning of main
-11-13 19:11:26.567  4502  4502 D CleanLauncher: beginDrag com.google.android.gm/com.google.android.gm.ConversationListActivityGmail bounds=Rect(340, 1121 - 487, 1320) local=Offset(122.0, 124.0)
-11-13 19:11:29.865  4502  4502 D CleanLauncher: endDrag active=true pointer=Offset(948.6, 1828.9) grid=Rect.fromLTRB(32.0, 149.0, 1048.0, 1985.0) dock=Rect.fromLTRB(26.0, 2101.0, 1054.0, 2316.0) page=0
