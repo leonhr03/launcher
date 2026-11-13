@@ -452,14 +452,23 @@ private fun Padlock(open: Boolean, modifier: Modifier) {
     Canvas(modifier) {
         val w = size.width
         val h = size.height
-        val sw = w * 0.16f
-        val shackleTop = if (open) -h * 0.12f else 0f
+        val sw = w * 0.15f
+        val bodyTop = h * 0.45f
+        val sl = w * 0.22f // linke Bügelseite
+        val sr = w * 0.78f // rechte Bügelseite
+        val r = (sr - sl) / 2
+        val lift = if (open) h * 0.14f else 0f
+        val arcTop = sw / 2 + (if (open) 0f else lift)
+        // Bügel: Halbkreis + zwei Beine
         drawArc(
             Color.White, 180f, 180f, false,
-            topLeft = Offset(w * 0.18f + if (open) w * 0.32f else 0f, shackleTop + sw / 2),
-            size = Size(w * 0.64f, h * 0.6f),
+            topLeft = Offset(sl, arcTop),
+            size = Size(r * 2, r * 2),
             style = Stroke(sw),
         )
-        drawRoundRect(Color.White, Offset(0f, h * 0.42f), Size(w, h * 0.58f), CornerRadius(w * 0.14f))
+        val legTop = arcTop + r
+        drawLine(Color.White, Offset(sr, legTop), Offset(sr, bodyTop), sw)
+        drawLine(Color.White, Offset(sl, legTop), Offset(sl, if (open) legTop + h * 0.06f else bodyTop), sw)
+        drawRoundRect(Color.White, Offset(0f, bodyTop), Size(w, h - bodyTop), CornerRadius(w * 0.16f))
     }
 }

@@ -618,7 +618,7 @@ private fun EditBar(c: LauncherController, modifier: Modifier) {
         Box(
             Modifier
                 .size(36.dp)
-                .frosted(CircleShape, Color.White.copy(alpha = 0.3f), Color.Black.copy(alpha = 0.4f), prefs.glass)
+                .frosted(CircleShape, Color.Black.copy(alpha = 0.32f), Color.Black.copy(alpha = 0.45f), prefs.glass)
                 .clickable { c.widgetPicker = true },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Filled.Add, "Widget hinzufügen", tint = Color.White, modifier = Modifier.size(22.dp)) }
@@ -626,7 +626,7 @@ private fun EditBar(c: LauncherController, modifier: Modifier) {
         Box(
             Modifier
                 .size(36.dp)
-                .frosted(CircleShape, Color.White.copy(alpha = 0.3f), Color.Black.copy(alpha = 0.4f), prefs.glass)
+                .frosted(CircleShape, Color.Black.copy(alpha = 0.32f), Color.Black.copy(alpha = 0.45f), prefs.glass)
                 .clickable { c.openSettings() },
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Filled.Settings, "Einstellungen", tint = Color.White, modifier = Modifier.size(20.dp)) }

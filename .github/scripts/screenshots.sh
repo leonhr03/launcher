@@ -27,40 +27,48 @@ adb shell am force-stop $PKG
 adb shell input keyevent KEYCODE_HOME
 shot 01-startbildschirm 8
 
-# Ordner erstellen: App auf andere App ziehen
-adb shell input draganddrop 159 860 413 860 1500
-sleep 2
-adb shell input tap 540 120
-adb shell input keyevent KEYCODE_BACK
-shot 02-ordner-erstellt 2
-adb shell input tap 413 840
-shot 03-ordner-offen 2
-adb shell input keyevent KEYCODE_BACK
-sleep 1
-
 # Kontextmenü
-adb shell input swipe 667 840 667 840 1000
-shot 04-app-menue 2
+adb shell input swipe 667 880 667 880 1000
+shot 02-app-menue 2
 adb shell input keyevent KEYCODE_BACK
 sleep 1
 
 # App-Mediathek
 adb shell input swipe 540 1500 540 500 200
-shot 05-app-mediathek 3
+shot 03-app-mediathek 3
 adb shell input keyevent KEYCODE_BACK
 sleep 1
 
-# Bearbeitungsmodus (auf Seite 2 lange auf freie Fläche drücken)
-adb shell input swipe 950 1300 100 1300 250
-sleep 2
-adb shell input swipe 540 1650 540 1650 1000
-shot 06-bearbeiten 2
+# Bearbeitungsmodus (lange auf freie Fläche drücken)
+adb shell input swipe 920 1800 920 1800 1000
+shot 04-bearbeiten 2
+
+# Ordner erstellen: Calendar auf Clock ziehen (echte Finger-Bewegung)
+adb shell input motionevent DOWN 159 880
+sleep 0.3
+for x in 180 220 260 300 340 380 412; do adb shell input motionevent MOVE $x 880; done
+sleep 1
+adb shell input motionevent UP 412 880
+sleep 1
+# Ziehen auf freien Platz: Gmail (Reihe 3, Spalte 2) ganz nach unten rechts
+adb shell input motionevent DOWN 412 1185
+sleep 0.3
+for y in 1250 1350 1450 1550 1650 1750 1800; do adb shell input motionevent MOVE 920 $y; done
+sleep 1
+adb shell input motionevent UP 920 1800
+shot 05-ordner-und-verschoben 2
+
 # Widget-Galerie
-adb shell input tap 89 126
-shot 07-widgets 3
+adb shell input tap 88 196
+shot 06-widgets 3
 adb shell input keyevent KEYCODE_BACK
 sleep 1
-adb shell input keyevent KEYCODE_HOME
+# Fertig
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+adb shell input tap 412 880
+shot 07-ordner-offen 3
+adb shell input keyevent KEYCODE_BACK
 sleep 1
 adb shell input keyevent KEYCODE_HOME
 sleep 2
