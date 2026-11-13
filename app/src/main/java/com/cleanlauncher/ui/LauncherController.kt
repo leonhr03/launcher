@@ -240,6 +240,7 @@ class LauncherController(val context: Context, val prefs: Prefs) {
     }
 
     fun beginDrag(item: Item, source: DragSource, folderId: Long?, bounds: Rect?, local: Offset) {
+        android.util.Log.d("CleanLauncher", "beginDrag ${item.appKey ?: item.type} bounds=$bounds local=$local")
         pendingDrag(item, source, folderId, bounds, local)
         drag?.active = true
         menu = null
@@ -265,6 +266,7 @@ class LauncherController(val context: Context, val prefs: Prefs) {
         val d = drag
         edgeJob?.cancel()
         edgeDir = 0
+        android.util.Log.d("CleanLauncher", "endDrag active=${d?.active} pointer=${d?.pointer} grid=$gridRect dock=$dockRect page=${pager?.currentPage}")
         if (d != null && d.active) drop(d)
         drag = null
         if (d?.source == DragSource.FOLDER && d.active) openFolderId = null
@@ -295,6 +297,7 @@ class LauncherController(val context: Context, val prefs: Prefs) {
                 delay(550)
                 val pg = pager ?: return@launch
                 val target = pg.currentPage + dir
+                android.util.Log.d("CleanLauncher", "edge flip dir=$dir to=$target")
                 if (target in 0 until pg.pageCount) {
                     haptic()
                     pg.animateScrollToPage(target)

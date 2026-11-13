@@ -51,11 +51,13 @@ sleep 1
 adb shell input motionevent UP 412 880
 shot 05a-ordner-erstellt 2
 # Ziehen auf freien Platz: Gmail (Reihe 3, Spalte 2) ganz nach unten rechts
+adb logcat -c
 adb shell input motionevent DOWN 412 1185
 sleep 0.3
-for y in 1250 1350 1450 1550 1650 1750 1800; do adb shell input motionevent MOVE 920 $y; done
+for i in 1 2 3 4 5 6 7 8 9 10; do adb shell input motionevent MOVE $((412 + i * 50)) $((1185 + i * 60)); done
 sleep 1
-adb shell input motionevent UP 920 1800
+shot 05b-beim-ziehen 0
+adb shell input motionevent UP 912 1785
 shot 05-ordner-und-verschoben 2
 
 # Widget-Galerie
@@ -84,4 +86,5 @@ adb shell am start -n $PKG/.SettingsActivity
 shot 09-einstellungen 4
 adb shell input swipe 540 1700 540 500 400
 shot 10-einstellungen-2 2
+adb logcat -d -s CleanLauncher > $OUT/log.txt
 ls -la $OUT
