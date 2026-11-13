@@ -26,12 +26,12 @@ shot 3-app-mediathek 3
 adb shell input keyevent KEYCODE_BACK
 sleep 2
 # Kontextmenü (lange auf erstes Symbol drücken)
-adb shell input swipe 160 330 160 330 900
+adb shell input swipe 158 250 158 250 900
 shot 4-app-menue 3
 adb shell input keyevent KEYCODE_BACK
 sleep 2
 # Bearbeitungsmodus (lange auf freie Fläche im Dock-Bereich drücken)
-adb shell input swipe 540 1650 540 1650 900
+adb shell input swipe 15 1000 15 1000 900
 shot 5-bearbeiten 3
 adb shell input keyevent KEYCODE_BACK
 sleep 1
