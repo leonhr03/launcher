@@ -227,8 +227,8 @@ fun AppDrawer(c: LauncherController, apps: List<AppInfo>) {
 
             if (prefs.drawerStyle == DrawerStyle.LIST) {
                 val rows = remember(filtered, query) {
-                    if (query.isNotBlank()) filtered.map { DrawerRow.App(it.first, it.second) }
-                    else buildList {
+                    if (query.isNotBlank()) filtered.map<Pair<AppInfo, String>, DrawerRow> { DrawerRow.App(it.first, it.second) }
+                    else buildList<DrawerRow> {
                         var last: String? = null
                         for ((app, label) in filtered) {
                             val ch = label.firstOrNull()?.uppercaseChar()
