@@ -111,7 +111,7 @@ python3 .github/scripts/make_miui_backup.py /tmp/comps.txt /tmp/provider.txt /tm
 adb shell mkdir -p /sdcard/MIUI/backup/AllBackup/20261116_120000
 adb push /tmp/home.bak "/sdcard/MIUI/backup/AllBackup/20261116_120000/Startbildschirm(com.miui.home).bak"
 adb shell appwidget grantbind --package $PKG --user 0
-adb shell am start -n $PKG/.SettingsActivity --ez auto_import true
+adb shell am start -S -W -n $PKG/.SettingsActivity --ez auto_import true
 shot 11-import-gefunden 6
 tap_text "Übernehmen"
 sleep 6
