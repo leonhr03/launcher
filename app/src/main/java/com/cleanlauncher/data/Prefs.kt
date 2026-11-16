@@ -186,6 +186,7 @@ class Prefs private constructor(context: Context) {
     var knownApps by list("known_apps")
     var customLabels by map("custom_labels")
     var launchCounts by map("launch_counts")
+    var pendingWidgets by list("pending_widgets")
 
     fun labelFor(key: String, original: String): String = customLabels[key] ?: original
 

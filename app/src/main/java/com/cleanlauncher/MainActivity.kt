@@ -12,7 +12,13 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshotFlow
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import com.cleanlauncher.data.AppRepository
+import com.cleanlauncher.data.MiuiImport
 import com.cleanlauncher.data.Prefs
 import com.cleanlauncher.data.WallpaperRepo
 import com.cleanlauncher.lock.LockService
@@ -25,6 +31,7 @@ class MainActivity : ComponentActivity() {
     private val homePress = mutableIntStateOf(0)
     private lateinit var controller: LauncherController
     private var pendingWidget: Pair<Int, AppWidgetProviderInfo>? = null
+    private var pendingPlacement: MiuiImport.PendingWidget? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -42,6 +49,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             LauncherRoot(this, controller, homePress.intValue)
         }
+        // Sobald die Apps geladen sind, importierte Widgets anlegen
+        lifecycleScope.launch {
+            snapshotFlow { AppRepository.apps }.first { it.isNotEmpty() }
+            delay(800)
+            processImportedWidgets()
+        }
     }
 
     override fun onStart() {
@@ -49,6 +62,25 @@ class MainActivity : ComponentActivity() {
         try {
             Widgets.host.startListening()
         } catch (_: Exception) {
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        processImportedWidgets()
+    }
+
+    /** Nach einem Xiaomi-Import: Widgets nacheinander wieder anlegen (an ihrer alten Position). */
+    private fun processImportedWidgets() {
+        if (pendingWidget != null || AppRepository.apps.isEmpty() || controller.byKey.isEmpty()) return
+        val prefs = Prefs.get(this)
+        while (prefs.pendingWidgets.isNotEmpty()) {
+            val next = prefs.pendingWidgets.first()
+            prefs.pendingWidgets = prefs.pendingWidgets.drop(1)
+            val w = MiuiImport.PendingWidget.decode(next) ?: continue
+            val info = Widgets.providers().firstOrNull { it.provider == w.provider } ?: continue
+            addWidget(info, w)
+            return
         }
     }
 
@@ -76,7 +108,8 @@ class MainActivity : ComponentActivity() {
 
     // ---------------- Widgets hinzufügen ----------------
 
-    private fun addWidget(info: AppWidgetProviderInfo) {
+    private fun addWidget(info: AppWidgetProviderInfo, at: MiuiImport.PendingWidget? = null) {
+        pendingPlacement = at
         val id = Widgets.host.allocateAppWidgetId()
         val ok = try {
             Widgets.manager.bindAppWidgetIdIfAllowed(id, info.profile, info.provider, null)
@@ -105,7 +138,9 @@ class MainActivity : ComponentActivity() {
             }
         }
         pendingWidget = null
-        controller.placeWidget(id, info)
+        controller.placeWidget(id, info, pendingPlacement)
+        pendingPlacement = null
+        processImportedWidgets()
     }
 
     private fun reconfigure(id: Int) {
@@ -126,11 +161,13 @@ class MainActivity : ComponentActivity() {
             else {
                 Widgets.delete(p.first)
                 pendingWidget = null
+                pendingPlacement = null
             }
             REQ_CONFIGURE -> {
-                if (resultCode == Activity.RESULT_OK) controller.placeWidget(p.first, p.second)
+                if (resultCode == Activity.RESULT_OK) controller.placeWidget(p.first, p.second, pendingPlacement)
                 else Widgets.delete(p.first)
                 pendingWidget = null
+                pendingPlacement = null
             }
         }
     }

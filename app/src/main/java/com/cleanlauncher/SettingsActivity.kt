@@ -15,7 +15,7 @@ class SettingsActivity : ComponentActivity() {
         AppRepository.init(this)
         WallpaperRepo.init(this)
         setContent {
-            SettingsScreen(onFinish = { finish() })
+            SettingsScreen(onFinish = { finish() }, autoImport = intent?.getBooleanExtra("auto_import", false) == true)
         }
     }
 }

@@ -493,7 +493,19 @@ class LauncherController(val context: Context, val prefs: Prefs) {
         return cw to ch
     }
 
-    fun placeWidget(id: Int, info: AppWidgetProviderInfo) {
+    fun placeWidget(id: Int, info: AppWidgetProviderInfo, at: com.cleanlauncher.data.MiuiImport.PendingWidget? = null) {
+        if (at != null) {
+            val sx = at.sx.coerceIn(1, prefs.columns)
+            val sy = at.sy.coerceIn(1, prefs.rows)
+            val item = Item(0, ItemType.WIDGET, spanX = sx, spanY = sy, widgetId = id, provider = info.provider.flattenToString())
+            if (ws.isFree(at.page, at.x, at.y, sx, sy, prefs.columns, prefs.rows, -1, ::visible)) {
+                ws.add(item.copy(page = at.page, x = at.x, y = at.y))
+            } else {
+                val (p, x, y) = ws.findFree(sx, sy, prefs.columns, prefs.rows, ::visible, at.page)
+                ws.add(item.copy(page = p, x = x, y = y))
+            }
+            return
+        }
         val cols = prefs.columns
         val rows = prefs.rows
         val (cw, ch) = cellPx()

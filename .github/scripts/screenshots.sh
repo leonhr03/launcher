@@ -86,5 +86,40 @@ adb shell am start -n $PKG/.SettingsActivity
 shot 09-einstellungen 4
 adb shell input swipe 540 1700 540 500 400
 shot 10-einstellungen-2 2
-adb logcat -d -s CleanLauncher > $OUT/log.txt
+# ---------- Xiaomi-Layout-Import ----------
+tap_text() {
+  adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+  adb shell cat /sdcard/ui.xml > /tmp/ui.xml
+  python3 - "$1" <<'PY'
+import re, sys, subprocess
+xml = open('/tmp/ui.xml', encoding='utf-8', errors='ignore').read()
+m = re.search(r'text="' + re.escape(sys.argv[1]) + r'"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', xml)
+if m:
+    x1, y1, x2, y2 = map(int, m.groups())
+    subprocess.run(["adb", "shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2)])
+    print("tapped", sys.argv[1])
+else:
+    print("not found", sys.argv[1])
+PY
+}
+adb shell cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER \
+  | grep -oE '[a-z][a-z0-9_.]+/[A-Za-z0-9_.$]+' | sort -u > /tmp/comps.txt
+adb shell dumpsys appwidget | grep -oE 'provider=ComponentInfo\{[^}]+\}' | sed 's/provider=ComponentInfo{//; s/}//' | sort -u > /tmp/providers.txt
+(grep -i -m1 'digital\|clock' /tmp/providers.txt || head -1 /tmp/providers.txt) > /tmp/provider.txt
+cat /tmp/provider.txt
+python3 .github/scripts/make_miui_backup.py /tmp/comps.txt /tmp/provider.txt /tmp/home.bak
+adb shell mkdir -p /sdcard/MIUI/backup/AllBackup/20261116_120000
+adb push /tmp/home.bak "/sdcard/MIUI/backup/AllBackup/20261116_120000/Startbildschirm(com.miui.home).bak"
+adb shell appwidget grantbind --package $PKG --user 0
+adb shell am start -n $PKG/.SettingsActivity --ez auto_import true
+shot 11-import-gefunden 6
+tap_text "Übernehmen"
+sleep 6
+adb shell input keyevent KEYCODE_HOME
+shot 12-import-seite-1 4
+adb shell input swipe 950 1300 100 1300 250
+shot 13-import-seite-2 3
+adb shell input swipe 950 1300 100 1300 250
+shot 14-import-seite-3 3
+
 ls -la $OUT

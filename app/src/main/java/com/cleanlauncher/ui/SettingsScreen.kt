@@ -76,7 +76,7 @@ private val LocalPalette = androidx.compose.runtime.staticCompositionLocalOf {
 private enum class Screen { MAIN, HIDDEN, NAMES }
 
 @Composable
-fun SettingsScreen(onFinish: () -> Unit) {
+fun SettingsScreen(onFinish: () -> Unit, autoImport: Boolean = false) {
     val dark = isSystemInDarkTheme()
     val palette = if (dark) {
         Palette(Color(0xFF000000), Color(0xFF1C1C1E), Color.White, Color(0xFF8E8E93), Color(0xFF0A84FF), Color(0xFF38383A))
@@ -93,7 +93,7 @@ fun SettingsScreen(onFinish: () -> Unit) {
                     .background(palette.bg),
             ) {
                 when (screen) {
-                    Screen.MAIN -> MainSettings(onBack = onFinish, open = { screen = it })
+                    Screen.MAIN -> MainSettings(onBack = onFinish, open = { screen = it }, autoImport = autoImport)
                     Screen.HIDDEN -> HiddenAppsScreen { screen = Screen.MAIN }
                     Screen.NAMES -> NamesScreen { screen = Screen.MAIN }
                 }
@@ -120,7 +120,7 @@ private fun TopBar(title: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
+private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit, autoImport: Boolean) {
     val ctx = LocalContext.current
     val prefs = remember { Prefs.get(ctx) }
     var resetDialog by remember { mutableStateOf(false) }
@@ -143,6 +143,9 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit) {
                     ) { SystemActions.setAsDefaultLauncher(ctx) }
                 }
             }
+
+            ImportSection(prefs, autoImport)
+            GestureNavSection()
 
             Preview(prefs)
 
@@ -851,5 +854,175 @@ private fun LockSection(prefs: Prefs) {
     }
     if (prefs.lockEnabled) {
         Footer("Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone.")
+    }
+}
+
+
+// ======================= Xiaomi-Layout übernehmen =======================
+
+@Composable
+private fun ImportSection(prefs: Prefs, autoImport: Boolean) {
+    val ctx = LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val tick = resumeTick()
+    var result by remember { mutableStateOf<com.cleanlauncher.data.MiuiImport.Result?>(null) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    val hasAccess = remember(tick) { com.cleanlauncher.data.WallpaperRepo.hasFileAccess() }
+
+    fun run(block: () -> com.cleanlauncher.data.MiuiImport.Result) {
+        busy = true
+        scope.launch {
+            try {
+                result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { block() }
+            } catch (e: com.cleanlauncher.data.MiuiImport.ImportException) {
+                error = e.message
+            } catch (e: Exception) {
+                error = "Die Sicherung konnte nicht gelesen werden (${e.javaClass.simpleName})."
+            }
+            busy = false
+        }
+    }
+
+    fun autoSearch() {
+        val f = com.cleanlauncher.data.MiuiImport.findBackup()
+        if (f == null) error = "Keine Startbildschirm-Sicherung gefunden. Erstelle zuerst eine Sicherung (siehe Anleitung) oder wähle die Datei selbst."
+        else run { com.cleanlauncher.data.MiuiImport.read(ctx, f) }
+    }
+
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri -> if (uri != null) run { com.cleanlauncher.data.MiuiImport.read(ctx, uri) } }
+
+    androidx.compose.runtime.LaunchedEffect(autoImport) {
+        if (autoImport) {
+            kotlinx.coroutines.delay(1500)
+            autoSearch()
+        }
+    }
+
+    Section("Xiaomi-Layout übernehmen")
+    Group {
+        ActionRow(
+            if (busy) "Wird gelesen …" else "Sicherung automatisch suchen",
+            if (hasAccess) "Sucht in MIUI/backup nach der neuesten Startbildschirm-Sicherung"
+            else "Braucht „Zugriff auf alle Dateien“ – sonst unten die Datei selbst wählen",
+            highlight = true,
+        ) {
+            if (!hasAccess && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                openSafe(
+                    ctx,
+                    android.content.Intent(
+                        android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        android.net.Uri.parse("package:" + ctx.packageName),
+                    ),
+                )
+            } else autoSearch()
+        }
+        Divider()
+        ActionRow("Sicherungsdatei selbst wählen", "Die .bak-Datei der Startbildschirm-Sicherung") {
+            picker.launch(arrayOf("*/*"))
+        }
+    }
+    Footer(
+        "So geht’s: Auf dem Xiaomi Einstellungen → Über das Telefon → Sichern & wiederherstellen → " +
+            "Mobilgerät (Lokale Sicherung) → Sichern → nur „Startbildschirm“ bzw. „Systemanwendungen → Startbildschirm“ auswählen " +
+            "und OHNE Passwort sichern. Danach hier „automatisch suchen“. Seiten, Dock, Ordner und Widgets werden an dieselbe Stelle übernommen.",
+    )
+
+    error?.let { msg ->
+        IosAlert(
+            title = "Import nicht möglich",
+            message = msg,
+            buttons = listOf(AlertButton("OK", bold = true) { error = null }),
+            onDismiss = { error = null },
+        )
+    }
+    result?.let { r ->
+        val text = buildString {
+            append("${r.pages} Seite(n), ${r.cols} × ${r.rows} Raster\n")
+            append("${r.apps} Apps, ${r.folders} Ordner, ${r.widgets.size} Widgets")
+            if (r.missing > 0) append("\n${r.missing} Apps sind auf diesem Handy nicht installiert")
+            if (r.skipped > 0) append("\n${r.skipped} Xiaomi-eigene Elemente können nicht übernommen werden")
+            append("\n\nDein aktuelles Layout wird ersetzt.")
+            if (r.widgets.isNotEmpty()) append(" Für die Widgets fragt Android eventuell kurz nach Erlaubnis.")
+        }
+        IosAlert(
+            title = "Layout gefunden",
+            message = text,
+            buttons = listOf(
+                AlertButton("Übernehmen", bold = true) {
+                    com.cleanlauncher.data.MiuiImport.apply(ctx, r)
+                    result = null
+                    android.widget.Toast.makeText(ctx, "Layout übernommen", android.widget.Toast.LENGTH_SHORT).show()
+                    ctx.startActivity(
+                        android.content.Intent(android.content.Intent.ACTION_MAIN)
+                            .addCategory(android.content.Intent.CATEGORY_HOME)
+                            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                    )
+                },
+                AlertButton("Abbrechen") { result = null },
+            ),
+            onDismiss = { result = null },
+        )
+    }
+}
+
+// ======================= Wischgesten (Xiaomi) =======================
+
+private const val FSG_KEY = "force_fsg_nav_bar"
+private const val ADB_COMMANDS =
+    "adb shell pm grant com.cleanlauncher android.permission.WRITE_SECURE_SETTINGS\n" +
+        "adb shell settings put global force_fsg_nav_bar 1"
+
+@Composable
+private fun GestureNavSection() {
+    val ctx = LocalContext.current
+    val tick = resumeTick()
+    val canWrite = remember(tick) {
+        ctx.checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+    var forced by remember(tick) {
+        mutableStateOf(runCatching { android.provider.Settings.Global.getInt(ctx.contentResolver, FSG_KEY, 0) == 1 }.getOrDefault(false))
+    }
+    val isXiaomi = remember {
+        android.os.Build.MANUFACTURER.equals("Xiaomi", true) || android.os.Build.BRAND.equals("Redmi", true) || android.os.Build.BRAND.equals("POCO", true)
+    }
+    if (!isXiaomi && !forced && !canWrite) return
+
+    Section("Wischgesten statt 3 Tasten")
+    Group {
+        if (canWrite) {
+            SwitchRow("Xiaomi-Wischgesten mit diesem Launcher", forced, "Danach in den Systemeinstellungen „Vollbild-Gesten“ wählen") {
+                runCatching { android.provider.Settings.Global.putInt(ctx.contentResolver, FSG_KEY, if (it) 1 else 0) }
+                forced = it
+            }
+        } else {
+            ActionRow(
+                if (forced) "✓ Wischgesten sind freigeschaltet" else "Einmalig per PC freischalten",
+                if (forced) "Wähle jetzt in den Systemeinstellungen „Vollbild-Gesten“" else "Tippen kopiert die zwei Befehle",
+                highlight = !forced,
+            ) {
+                val cm = ctx.getSystemService(android.content.ClipboardManager::class.java)
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("ADB", ADB_COMMANDS))
+                android.widget.Toast.makeText(ctx, "Befehle kopiert", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+        Divider()
+        ActionRow("Systemnavigation öffnen", "Einstellungen → Startbildschirm → Systemnavigation → Gesten") {
+            openSafe(
+                ctx,
+                android.content.Intent().setClassName("com.android.settings", "com.android.settings.SubSettings")
+                    .putExtra(":settings:show_fragment", "com.android.settings.FullScreenDisplaySettings"),
+                android.content.Intent(android.provider.Settings.ACTION_SETTINGS),
+            )
+        }
+    }
+    if (!canWrite && !forced) {
+        Footer(
+            "Xiaomi schaltet die Wischgesten ab, sobald ein anderer Launcher aktiv ist. Mit einem kleinen Trick geht es trotzdem: " +
+                "Entwickleroptionen → USB-Debugging an, Handy per Kabel an den PC, und dort die zwei kopierten Befehle ausführen " +
+                "(Programm „adb“ / Android Platform-Tools). Das musst du nur einmal machen. Danach unter Systemnavigation „Gesten“ wählen.",
+        )
     }
 }

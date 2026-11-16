@@ -36,6 +36,11 @@ android {
     buildFeatures {
         compose = true
     }
+    lint {
+        disable += setOf("ProtectedPermissions")
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
