@@ -28,16 +28,25 @@ Die Symbolgröße ist frei einstellbar, damit sie zu deinem bisherigen Launcher 
 | Nach unten wischen / „Suchen“ | Suche |
 | Home-Taste | zurück zur ersten Seite |
 
-## Dein bisheriges Layout übernehmen
+## Dein Xiaomi-Layout übernehmen (Seiten, Dock, Ordner, Widgets)
 
-Xiaomi speichert die Anordnung des MIUI/HyperOS-Launchers in einem geschützten Bereich, den andere Apps ohne Root nicht lesen dürfen. Ein automatischer Import ist daher nicht möglich.
-So baust du es schnell nach:
-1. **Einstellungen → Raster:** Spalten/Zeilen wie bei MIUI (meist 4 × 6 oder 5 × 6), Symbolgröße angleichen.
-2. **Widgets:** Bearbeitungsmodus → **+** → dieselben Widgets deiner Apps wählen (z. B. Xiaomi-Uhr, Wetter, Kalender). Größe über „Größe ändern“ anpassen.
-3. **Apps & Ordner** per Drag & Drop an dieselben Plätze ziehen.
-4. **Hintergrund:** Einstellungen → Hintergrundbild → „Aktuelles Hintergrundbild übernehmen“.
+1. Auf dem Xiaomi: **Einstellungen → Über das Telefon → Sichern & wiederherstellen → Mobilgerät / Lokale Sicherung → Sichern**.
+   Nur **Startbildschirm** (bzw. *Systemanwendungen → Startbildschirm*) auswählen und **ohne Passwort** sichern.
+2. Im Launcher: **Launcher-Einstellungen → Xiaomi-Layout übernehmen → Sicherung automatisch suchen** (braucht „Zugriff auf alle Dateien“) oder die `.bak`-Datei selbst wählen.
+3. **Übernehmen** tippen. Seiten, Raster, Dock, Ordner und Widgets landen an derselben Stelle. Für jedes Widget fragt Android eventuell einmal nach Erlaubnis.
 
-> Hinweis: Die speziellen MIUI-„Widget-Galerie“-Widgets (MAML) funktionieren nur im Xiaomi-Launcher. Normale Android-Widgets funktionieren alle.
+Nicht übernehmbar: Xiaomi-eigene Spezial-Widgets (MAML/„Gadgets“) und Einstellungen *innerhalb* von Widgets (z. B. die Stadt beim Wetter) – die einmal neu wählen.
+
+## Wischgesten statt 3 Tasten (Xiaomi)
+
+MIUI/HyperOS schaltet die Vollbild-Gesten ab, sobald ein anderer Launcher aktiv ist. Einmalig per PC freischalten:
+
+```
+adb shell pm grant com.cleanlauncher android.permission.WRITE_SECURE_SETTINGS
+adb shell settings put global force_fsg_nav_bar 1
+```
+
+(USB-Debugging in den Entwickleroptionen einschalten, Android Platform-Tools auf dem PC.) Danach in den Launcher-Einstellungen unter „Wischgesten“ den Schalter nutzen bzw. in den Systemeinstellungen „Gesten“ wählen.
 
 ## iOS-Sperrbildschirm
 
