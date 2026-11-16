@@ -104,8 +104,10 @@ PY
 }
 adb shell cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER \
   | grep -oE '[a-z][a-z0-9_.]+/[A-Za-z0-9_.$]+' | sort -u > /tmp/comps.txt
-adb shell dumpsys appwidget | grep -oE 'provider=ComponentInfo\{[^}]+\}' | sed 's/provider=ComponentInfo{//; s/}//' | sort -u > /tmp/providers.txt
-(grep -i -m1 'digital\|clock' /tmp/providers.txt || head -1 /tmp/providers.txt) > /tmp/provider.txt
+adb shell dumpsys appwidget > /tmp/aw.txt
+grep -oE 'ComponentInfo\{[^}]+\}' /tmp/aw.txt | sed 's/ComponentInfo{//; s/}//' | grep -v cleanlauncher | sort -u > /tmp/providers.txt
+cat /tmp/providers.txt
+(grep -i -m1 'digital\|clock\|calendar' /tmp/providers.txt || head -1 /tmp/providers.txt) > /tmp/provider.txt
 cat /tmp/provider.txt
 python3 .github/scripts/make_miui_backup.py /tmp/comps.txt /tmp/provider.txt /tmp/home.bak
 adb shell mkdir -p /sdcard/MIUI/backup/AllBackup/20261116_120000
