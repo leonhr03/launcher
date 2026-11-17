@@ -151,7 +151,7 @@ adb shell cmd notification post -t "Lisa" island1 "Kommst du heute noch vorbei?"
 shot 17-island-mitteilung 1
 sleep 4
 adb shell input swipe 250 15 250 1000 300
-shot 18-mitteilungszentrale 3
+shot 18-mitteilungszentrale 1
 adb shell input keyevent KEYCODE_BACK
 sleep 2
 adb shell input swipe 900 15 900 1000 300
@@ -164,4 +164,6 @@ shot 20-in-anderer-app 3
 adb shell input swipe 540 2390 540 1900 200
 shot 21-nach-home-geste 3
 
+adb logcat -d -b crash > $OUT/crash.txt || true
+adb logcat -d | grep -iE "cleanlauncher|AndroidRuntime|WindowManager.*(BadToken|permission)" | tail -200 > $OUT/log.txt || true
 ls -la $OUT
