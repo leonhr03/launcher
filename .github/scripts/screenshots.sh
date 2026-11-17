@@ -125,14 +125,18 @@ adb shell input swipe 950 1300 100 1300 250
 shot 14-import-seite-3 3
 
 # ---------- iOS überall: Gestenleiste, Dynamic Island, Kontrollzentrum ----------
-adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
-adb shell settings put secure accessibility_enabled 1
 adb shell pm grant $PKG android.permission.WRITE_SECURE_SETTINGS || true
 adb shell appops set $PKG WRITE_SETTINGS allow
 adb shell cmd notification allow_dnd $PKG || true
-sleep 3
 adb shell am start -S -W -n $PKG/.SettingsActivity
+sleep 3
+adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
+adb shell settings put secure accessibility_enabled 1
 sleep 4
+adb shell input keyevent KEYCODE_HOME
+sleep 2
+adb shell am start -W -n $PKG/.SettingsActivity
+sleep 3
 shot 15-einstellungen-ios-ueberall 1
 tap_text "Gestenleiste statt 3 Tasten"
 sleep 1
