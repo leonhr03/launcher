@@ -259,7 +259,7 @@ private fun NotificationCenter(prefs: Prefs, run: (Intent) -> Unit, close: () ->
 }
 
 @Composable
-private fun SwipeToDismiss(enabled: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
+fun SwipeToDismiss(enabled: Boolean, onDismiss: () -> Unit, content: @Composable () -> Unit) {
     val offset = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     var width by remember { mutableFloatStateOf(1000f) }

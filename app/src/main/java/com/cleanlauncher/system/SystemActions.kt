@@ -24,7 +24,11 @@ class LauncherAccessibilityService : AccessibilityService() {
         overlays?.onConfigurationChanged()
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            overlays?.onWindowChanged(event.packageName?.toString())
+        }
+    }
     override fun onInterrupt() {}
 
     override fun onDestroy() {
@@ -43,6 +47,13 @@ class LauncherAccessibilityService : AccessibilityService() {
 object SystemActions {
 
     val accessibilityEnabled: Boolean get() = LauncherAccessibilityService.instance != null
+
+    /** Zeigt den iOS-Sperrbildschirm sofort über die Bedienungshilfe (falls aktiv). */
+    fun showLockOverlay(): Boolean {
+        val o = LauncherAccessibilityService.instance?.overlays ?: return false
+        o.showLock()
+        return true
+    }
 
     fun openAccessibilitySettings(context: Context) {
         try {

@@ -12,8 +12,20 @@ android {
         applicationId = "com.cleanlauncher"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Steigt mit jedem Build automatisch, damit Updates ohne Deinstallieren gehen
+        val run = (System.getenv("GITHUB_RUN_NUMBER") ?: "0").toInt()
+        versionCode = 100 + run
+        versionName = "2.$run"
+    }
+
+    signingConfigs {
+        create("fixed") {
+            // Fester Schlüssel: jede neue Version lässt sich über die alte installieren
+            storeFile = file("cleanlauncher.keystore")
+            storePassword = "cleanlauncher"
+            keyAlias = "cleanlauncher"
+            keyPassword = "cleanlauncher"
+        }
     }
 
     buildTypes {
@@ -22,7 +34,7 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Mit dem Debug-Schlüssel signiert, damit die APK direkt installiert werden kann.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("fixed")
         }
     }
 

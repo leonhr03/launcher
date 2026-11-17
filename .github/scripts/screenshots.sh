@@ -164,6 +164,21 @@ shot 20-in-anderer-app 3
 adb shell input swipe 540 2390 540 1900 200
 shot 21-nach-home-geste 3
 
+# ---------- Sperrbildschirm sofort (Overlay) + Sicherung ----------
+adb shell am start -W -n $PKG/.SettingsActivity --ez preview_lock true
+shot 22-sperrbildschirm-sofort 3
+adb shell input swipe 540 2250 540 900 250
+shot 23-nach-entsperren 3
+adb shell input keyevent KEYCODE_HOME
+sleep 1
+adb shell am start -W -n $PKG/.SettingsActivity
+sleep 2
+adb shell input swipe 540 1800 540 700 300
+shot 24-einstellungen-sicherung 2
+adb shell input keyevent KEYCODE_HOME
+shot 25-strich-unten 3
+adb shell dumpsys package $PKG | grep -E "versionCode|versionName" > $OUT/version.txt || true
+
 adb logcat -d -b crash > $OUT/crash.txt || true
 adb logcat -d | grep -iE "cleanlauncher|AndroidRuntime|WindowManager.*(BadToken|permission)" | tail -200 > $OUT/log.txt || true
 ls -la $OUT

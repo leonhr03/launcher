@@ -80,6 +80,8 @@ class LockService : Service() {
 
         fun showLock(context: Context) {
             if (!Prefs.get(context).lockEnabled) return
+            // Mit aktiver Bedienungshilfe übernimmt die (schnellere) Overlay-Variante
+            if (com.cleanlauncher.system.LauncherAccessibilityService.instance?.overlays != null) return
             // Nicht während eines Anrufs (Näherungssensor schaltet den Bildschirm aus)
             val am = context.getSystemService(AudioManager::class.java)
             if (am.mode == AudioManager.MODE_IN_CALL || am.mode == AudioManager.MODE_IN_COMMUNICATION) return

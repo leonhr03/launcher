@@ -14,6 +14,9 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         AppRepository.init(this)
         WallpaperRepo.init(this)
+        if (intent?.getBooleanExtra("preview_lock", false) == true) {
+            com.cleanlauncher.system.SystemActions.showLockOverlay()
+        }
         setContent {
             SettingsScreen(onFinish = { finish() }, autoImport = intent?.getBooleanExtra("auto_import", false) == true)
         }

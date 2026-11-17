@@ -92,6 +92,10 @@ class OverlayManager(private val service: AccessibilityService) {
     private var topTrigger: View? = null
     private var island: View? = null
     private var shade: View? = null
+    private var lock: View? = null
+    private var lockUnlocked by mutableStateOf(false)
+    private var lockReset by mutableIntStateOf(0)
+    private val km = service.getSystemService(android.app.KeyguardManager::class.java)
     private var shadeCloseTick by mutableIntStateOf(0)
     private var shadeKind by mutableStateOf(ShadeKind.NOTIFICATIONS)
 
@@ -103,14 +107,32 @@ class OverlayManager(private val service: AccessibilityService) {
         }
     }
 
+    private val screenReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            when (i.action) {
+                Intent.ACTION_SCREEN_OFF -> if (prefs.lockEnabled) showLock()
+                Intent.ACTION_SCREEN_ON -> lockUnlocked = !km.isKeyguardLocked
+                Intent.ACTION_USER_PRESENT -> lockUnlocked = true
+            }
+        }
+    }
+
     fun start() {
         WallpaperRepo.init(service)
         MediaRepo.init(service)
         service.registerReceiver(powerReceiver, IntentFilter(Intent.ACTION_POWER_CONNECTED))
+        service.registerReceiver(
+            screenReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_OFF)
+                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_USER_PRESENT)
+            },
+        )
         scope.launch {
             snapshotFlow {
                 listOf(
-                    prefs.gestureBar, prefs.gestureBack, prefs.gestureBarDark, prefs.iosShade,
+                    prefs.gestureBar, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
                     prefs.dynamicIsland, prefs.islandOffsetY, prefs.islandWidth,
                 )
             }.collect { sync(rebuild = true) }
@@ -119,7 +141,9 @@ class OverlayManager(private val service: AccessibilityService) {
 
     fun stop() {
         runCatching { service.unregisterReceiver(powerReceiver) }
-        listOf(bar, leftEdge, rightEdge, topTrigger, island, shade).forEach { remove(it) }
+        runCatching { service.unregisterReceiver(screenReceiver) }
+        listOf(bar, leftEdge, rightEdge, topTrigger, island, shade, lock).forEach { remove(it) }
+        lock = null
         bar = null; leftEdge = null; rightEdge = null; topTrigger = null; island = null; shade = null
         owner.destroy()
         scope.cancel()
@@ -160,15 +184,22 @@ class OverlayManager(private val service: AccessibilityService) {
         setContent(content)
     }
 
+    /** Nutzt das Handy schon System-Wischgesten? Dann braucht es unsere Leiste nicht. */
+    private fun systemGestures(): Boolean = runCatching {
+        android.provider.Settings.Secure.getInt(service.contentResolver, "navigation_mode", 0) == 2 ||
+            android.provider.Settings.Global.getInt(service.contentResolver, "force_fsg_nav_bar", 0) == 1
+    }.getOrDefault(false)
+
     private fun sync(rebuild: Boolean) {
         val land = landscape()
+        val sysGestures = systemGestures()
         if (rebuild) {
             listOf(bar, leftEdge, rightEdge, topTrigger, island).forEach { remove(it) }
             bar = null; leftEdge = null; rightEdge = null; topTrigger = null; island = null
         }
         try {
-            if (prefs.gestureBar && !land && bar == null) addBar()
-            if (prefs.gestureBar && prefs.gestureBack && leftEdge == null) addEdges()
+            if (prefs.gestureBar && !land && !sysGestures && bar == null) addBar()
+            if (prefs.gestureBar && prefs.gestureBack && !sysGestures && leftEdge == null) addEdges()
             if (prefs.iosShade && topTrigger == null) addTopTrigger()
             if (prefs.dynamicIsland && !land && island == null) addIsland()
         } catch (e: Exception) {
@@ -181,7 +212,7 @@ class OverlayManager(private val service: AccessibilityService) {
     private fun addBar() {
         val h = dimen("navigation_bar_height", 48).coerceAtLeast((24 * density).toInt())
         val v = GestureBarView(
-            service, prefs.gestureBarDark,
+            service, prefs.gestureBarStyle,
             onHome = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME) },
             onRecents = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS) },
             onSwitch = {
@@ -261,6 +292,67 @@ class OverlayManager(private val service: AccessibilityService) {
         shade = null
     }
 
+    // ---------------- iOS-Sperrbildschirm (sofort, ohne Verzögerung) ----------------
+
+    val lockShowing: Boolean get() = lock != null
+
+    fun showLock() {
+        lockUnlocked = !km.isKeyguardLocked
+        if (lock != null) {
+            lockReset++
+            return
+        }
+        val am = service.getSystemService(android.media.AudioManager::class.java)
+        if (am.mode == android.media.AudioManager.MODE_IN_CALL || am.mode == android.media.AudioManager.MODE_IN_COMMUNICATION ||
+            am.mode == android.media.AudioManager.MODE_RINGTONE
+        ) return
+        hideShade()
+        val root = FrameLayout(service)
+        root.setViewTreeLifecycleOwner(owner)
+        root.setViewTreeSavedStateRegistryOwner(owner)
+        root.addView(
+            composeView {
+                com.cleanlauncher.ui.LauncherTheme(prefs, dark = true) {
+                    com.cleanlauncher.lock.LockScreen(
+                        prefs = prefs,
+                        unlocked = lockUnlocked,
+                        resetTick = lockReset,
+                        onUnlock = { hideLock() },
+                        onOpenNotification = { n ->
+                            hideLock()
+                            NotificationRepo.open(n)
+                        },
+                    )
+                }
+            },
+        )
+        try {
+            wm.addView(root, params(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT, Gravity.TOP))
+            lock = root
+            // Dynamic Island soll über dem Sperrbildschirm liegen
+            if (island != null) {
+                remove(island)
+                island = null
+                if (prefs.dynamicIsland && !landscape()) addIsland()
+            }
+        } catch (e: Exception) {
+            lock = null
+        }
+    }
+
+    fun hideLock() {
+        remove(lock)
+        lock = null
+    }
+
+    /** Ein anderes Fenster kommt nach vorne (Wecker, Anruf, Kamera …) -> Sperrbildschirm weg. */
+    fun onWindowChanged(pkg: String?) {
+        if (lock == null || pkg == null) return
+        val ignore = setOf(service.packageName, "com.android.systemui", "android", "com.miui.home", "com.miui.aod", "com.android.keyguard")
+        if (pkg in ignore || pkg.contains("keyguard") || pkg.contains("inputmethod")) return
+        hideLock()
+    }
+
     // ---------------- Dynamic Island ----------------
 
     private fun addIsland() {
@@ -284,14 +376,19 @@ class OverlayManager(private val service: AccessibilityService) {
 @SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 class GestureBarView(
     context: Context,
-    private val dark: Boolean,
+    private val style: Int,
     private val onHome: () -> Unit,
     private val onRecents: () -> Unit,
     private val onSwitch: () -> Unit,
 ) : View(context) {
     private val d = resources.displayMetrics.density
-    private val pill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (dark) Color.WHITE else Color.BLACK }
-    private val bg = if (dark) Color.BLACK else Color.WHITE
+    private val pill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (style == 2) Color.BLACK else Color.WHITE }
+    private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(90, 0, 0, 0) }
+    private val bg = when (style) {
+        1 -> Color.BLACK
+        2 -> Color.WHITE
+        else -> Color.TRANSPARENT
+    }
     private var downX = 0f
     private var downY = 0f
     private var lift = 0f
@@ -309,11 +406,16 @@ class GestureBarView(
     }
 
     override fun onDraw(canvas: Canvas) {
-        canvas.drawColor(bg)
+        if (bg != Color.TRANSPARENT) canvas.drawColor(bg)
         val w = 120 * d
         val h = 5 * d
         val cx = width / 2f + shift
-        val cy = height / 2f - (lift / 6).coerceAtMost(height / 3f)
+        // Strich unten wie beim iPhone
+        val cy = height - 9 * d - (lift / 6).coerceAtMost(height / 2f)
+        if (bg == Color.TRANSPARENT) {
+            val o = 1.2f * d
+            canvas.drawRoundRect(RectF(cx - w / 2 - o, cy - h / 2 - o, cx + w / 2 + o, cy + h / 2 + o), h, h, outline)
+        }
         canvas.drawRoundRect(RectF(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), h, h, pill)
     }
 

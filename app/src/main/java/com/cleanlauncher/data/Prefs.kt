@@ -171,6 +171,8 @@ class Prefs private constructor(context: Context) {
     var gestureBar by bool("gesture_bar", false)
     var gestureBack by bool("gesture_back", true)
     var gestureBarDark by bool("gesture_bar_dark", true)
+    /** 0 = transparent (nur Strich), 1 = schwarz, 2 = weiß */
+    var gestureBarStyle by int("gesture_bar_style", 0)
     var gestureSwitchApps by bool("gesture_switch_apps", true)
     var iosShade by bool("ios_shade", false)
     var dynamicIsland by bool("dynamic_island", false)

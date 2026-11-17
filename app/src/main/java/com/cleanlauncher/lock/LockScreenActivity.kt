@@ -202,7 +202,7 @@ class LockScreenActivity : ComponentActivity() {
 }
 
 @Composable
-private fun LockScreen(
+fun LockScreen(
     prefs: Prefs,
     unlocked: Boolean,
     resetTick: Int,
@@ -214,7 +214,7 @@ private fun LockScreen(
     val offset = remember { Animatable(0f) }
     val screenH = with(LocalDensity.current) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
     LaunchedEffect(resetTick) { offset.snapTo(0f) }
-    BackHandler { }
+    if (androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current != null) BackHandler { }
 
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
@@ -227,11 +227,8 @@ private fun LockScreen(
     val wallpaper = WallpaperRepo.lock
     val progress = (-offset.value / screenH).coerceIn(0f, 1f)
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .pointerInput(Unit) {
+    // Nach oben wischen zum Entsperren – nur auf Uhr- und unterem Bereich, damit die Mitteilungen normal scrollen
+    val unlockDrag = Modifier.pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onVerticalDrag = { ch, dy ->
                         ch.consume()
@@ -239,8 +236,8 @@ private fun LockScreen(
                     },
                     onDragEnd = {
                         scope.launch {
-                            if (offset.value < -size.height * 0.18f) {
-                                offset.animateTo(-size.height.toFloat(), tween(220))
+                            if (offset.value < -screenH * 0.12f) {
+                                offset.animateTo(-screenH, tween(220))
                                 onUnlock { scope.launch { offset.animateTo(0f, tween(250)) } }
                             } else {
                                 offset.animateTo(0f, tween(250))
@@ -248,7 +245,12 @@ private fun LockScreen(
                         }
                     },
                 )
-            },
+            }
+
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black),
     ) {
         if (wallpaper != null) {
             Image(
@@ -277,6 +279,7 @@ private fun LockScreen(
                 .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            Column(Modifier.fillMaxWidth().then(unlockDrag), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.height(10.dp))
             Padlock(open = unlocked, modifier = Modifier.size(22.dp, 26.dp))
             Spacer(Modifier.height(8.dp))
@@ -298,6 +301,8 @@ private fun LockScreen(
                 lineHeight = 100.sp,
                 style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 3f), 18f)),
             )
+            Spacer(Modifier.height(12.dp))
+            }
 
             // Mitteilungen
             val notifs = if (prefs.lockNotifications) NotificationRepo.list else emptyList()
@@ -321,18 +326,21 @@ private fun LockScreen(
                 if (notifs.isNotEmpty()) {
                     LazyColumn(
                         Modifier.fillMaxSize().padding(horizontal = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
-                        reverseLayout = false,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         if (com.cleanlauncher.system.MediaRepo.active) item(key = "media") { com.cleanlauncher.ui.MediaPlayerCard(prefs) }
-                        items(notifs.take(20), key = { it.key }) { n ->
-                            NotificationCard(prefs, n, hideContent = prefs.lockHideContent && !unlocked) { onOpenNotification(n) }
+                        items(notifs.take(30), key = { it.key }) { n ->
+                            com.cleanlauncher.ui.SwipeToDismiss(enabled = n.clearable, onDismiss = { NotificationRepo.dismiss(n) }) {
+                                NotificationCard(prefs, n, hideContent = prefs.lockHideContent && !unlocked) { onOpenNotification(n) }
+                            }
                         }
+                        item { Spacer(Modifier.height(12.dp)) }
                     }
                 }
             }
 
-            // Taschenlampe & Kamera
+            // Taschenlampe & Kamera + Wisch-Bereich
+            Column(Modifier.fillMaxWidth().then(unlockDrag), horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 46.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -358,6 +366,7 @@ private fun LockScreen(
             Spacer(Modifier.height(8.dp))
             Box(Modifier.size(134.dp, 5.dp).clip(RoundedCornerShape(50)).background(Color.White))
             Spacer(Modifier.height(8.dp))
+            }
         }
     }
 }

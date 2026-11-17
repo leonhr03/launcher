@@ -146,6 +146,7 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit, autoImport:
 
             SystemWideSection(prefs)
             ImportSection(prefs, autoImport)
+            OwnBackupSection()
             GestureNavSection()
 
             Preview(prefs)
@@ -848,13 +849,15 @@ private fun LockSection(prefs: Prefs) {
             Divider()
             FloatSlider("Hintergrund abdunkeln", prefs.lockDim, 0f..0.7f, step = 0.01f, percent = true) { prefs.lockDim = it }
             Divider()
-            ActionRow("Vorschau anzeigen") {
-                openSafe(ctx, android.content.Intent(ctx, com.cleanlauncher.lock.LockScreenActivity::class.java))
+            ActionRow("Vorschau anzeigen", "Zum Schließen nach oben wischen") {
+                if (!SystemActions.showLockOverlay()) {
+                    openSafe(ctx, android.content.Intent(ctx, com.cleanlauncher.lock.LockScreenActivity::class.java))
+                }
             }
         }
     }
     if (prefs.lockEnabled) {
-        Footer("Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone.")
+        Footer("Tipp: Mit eingeschalteter Bedienungshilfe („iOS überall“) erscheint der Sperrbildschirm sofort ohne Verzögerung. Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone.")
     }
 }
 
@@ -905,7 +908,17 @@ private fun ImportSection(prefs: Prefs, autoImport: Boolean) {
     Section("Xiaomi-Layout übernehmen")
     Group {
         ActionRow(
-            if (busy) "Wird gelesen …" else "Sicherung automatisch suchen",
+            "① Xiaomi-Sicherung jetzt erstellen",
+            "Öffnet „Sichern & wiederherstellen“ – dort nur „Startbildschirm“ wählen, ohne Passwort",
+            highlight = true,
+        ) {
+            if (!com.cleanlauncher.data.Backup.openXiaomiBackup(ctx)) {
+                error = "Die Xiaomi-Sicherung konnte nicht geöffnet werden. Öffne sie selbst: Einstellungen → Über das Telefon → Sichern & wiederherstellen."
+            }
+        }
+        Divider()
+        ActionRow(
+            if (busy) "Wird gelesen …" else "② Sicherung automatisch suchen & übernehmen",
             if (hasAccess) "Sucht in MIUI/backup nach der neuesten Startbildschirm-Sicherung"
             else "Braucht „Zugriff auf alle Dateien“ – sonst unten die Datei selbst wählen",
             highlight = true,
@@ -1065,7 +1078,12 @@ private fun SystemWideSection(prefs: Prefs) {
             Divider()
             SwitchRow("Seitlich über die Leiste = letzte App", prefs.gestureSwitchApps) { prefs.gestureSwitchApps = it }
             Divider()
-            SwitchRow("Dunkle Leiste", prefs.gestureBarDark, "Aus = helle Leiste mit dunklem Strich") { prefs.gestureBarDark = it }
+            ChoiceRow(
+                "Aussehen der Leiste",
+                listOf(0, 1, 2),
+                prefs.gestureBarStyle,
+                { when (it) { 1 -> "Schwarzer Balken (verdeckt Tasten)"; 2 -> "Weißer Balken (verdeckt Tasten)"; else -> "Nur Strich (wie iPhone)" } },
+            ) { prefs.gestureBarStyle = it }
         }
         Divider()
         SwitchRow(
@@ -1106,6 +1124,66 @@ private fun SystemWideSection(prefs: Prefs) {
                 openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
             }
         }
-        Footer("Die Gestenleiste liegt über den 3 Tasten und versteckt sie. Wenn du sie wieder loswerden willst: hier ausschalten oder die Bedienungshilfe deaktivieren.")
+        Footer("Die Gestenleiste liegt über den 3 Tasten. „Nur Strich“ ist durchsichtig wie beim iPhone. Nutzt dein Handy schon System-Wischgesten, blendet sie sich automatisch aus.")
+    }
+}
+
+
+// ======================= Eigene Launcher-Sicherung =======================
+
+@Composable
+private fun OwnBackupSection() {
+    val ctx = LocalContext.current
+    var msg by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var restoreUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    val exporter = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        if (uri != null) {
+            msg = try {
+                com.cleanlauncher.data.Backup.export(ctx, uri)
+                "Gesichert" to "Alle Einstellungen und dein Layout sind in der Datei gespeichert."
+            } catch (e: Exception) {
+                "Fehler" to (e.message ?: "Sicherung fehlgeschlagen")
+            }
+        }
+    }
+    val importer = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+    ) { uri -> restoreUri = uri }
+
+    Section("Launcher-Sicherung")
+    Group {
+        ActionRow("Einstellungen & Layout sichern", "Speichert alles in eine Datei (z. B. in Downloads)") {
+            exporter.launch("CleanLauncher-Sicherung.json")
+        }
+        Divider()
+        ActionRow("Sicherung wiederherstellen", "Lädt Einstellungen & Layout aus der Datei") {
+            importer.launch(arrayOf("application/json", "text/plain", "*/*"))
+        }
+    }
+    Footer("Updates lassen sich ab jetzt einfach drüber installieren – deine Einstellungen bleiben. Die Sicherung ist für ein neues Handy oder falls du doch mal neu installierst.")
+
+    msg?.let { (t, m) ->
+        IosAlert(t, m, listOf(AlertButton("OK", bold = true) { msg = null }), onDismiss = { msg = null })
+    }
+    restoreUri?.let { uri ->
+        IosAlert(
+            title = "Sicherung wiederherstellen?",
+            message = "Deine aktuellen Einstellungen und das Layout werden ersetzt. Der Launcher startet danach neu.",
+            buttons = listOf(
+                AlertButton("Wiederherstellen", bold = true) {
+                    restoreUri = null
+                    try {
+                        com.cleanlauncher.data.Backup.restore(ctx, uri)
+                        com.cleanlauncher.data.Backup.restart(ctx)
+                    } catch (e: Exception) {
+                        msg = "Fehler" to (e.message ?: "Wiederherstellen fehlgeschlagen")
+                    }
+                },
+                AlertButton("Abbrechen") { restoreUri = null },
+            ),
+            onDismiss = { restoreUri = null },
+        )
     }
 }
