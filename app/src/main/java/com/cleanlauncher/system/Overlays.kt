@@ -376,15 +376,15 @@ class OverlayManager(private val service: AccessibilityService) {
 @SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 class GestureBarView(
     context: Context,
-    private val style: Int,
+    private val barStyle: Int,
     private val onHome: () -> Unit,
     private val onRecents: () -> Unit,
     private val onSwitch: () -> Unit,
 ) : View(context) {
     private val d = resources.displayMetrics.density
-    private val pill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (style == 2) Color.BLACK else Color.WHITE }
+    private val pill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (barStyle == 2) Color.BLACK else Color.WHITE }
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(90, 0, 0, 0) }
-    private val bg = when (style) {
+    private val bg = when (barStyle) {
         1 -> Color.BLACK
         2 -> Color.WHITE
         else -> Color.TRANSPARENT
