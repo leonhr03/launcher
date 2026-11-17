@@ -9,6 +9,11 @@ import com.cleanlauncher.data.WallpaperRepo
 import com.cleanlauncher.ui.SettingsScreen
 
 class SettingsActivity : ComponentActivity() {
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra("preview_lock", false)) com.cleanlauncher.system.SystemActions.showLockOverlay()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

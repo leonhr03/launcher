@@ -175,8 +175,20 @@ adb shell am start -W -n $PKG/.SettingsActivity
 sleep 2
 adb shell input swipe 540 1800 540 700 300
 shot 24-einstellungen-sicherung 2
+# Emulator auf 3 Tasten umstellen (wie dein Xiaomi), damit unsere Strich-Leiste erscheint
+adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.threebutton || true
+adb shell settings put secure navigation_mode 0 || true
+sleep 3
+adb shell settings put secure enabled_accessibility_services none
+sleep 1
+adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
+sleep 4
 adb shell input keyevent KEYCODE_HOME
 shot 25-strich-unten 3
+adb shell am start -W -a android.settings.SETTINGS
+shot 26-strich-in-app 3
+adb shell input swipe 540 2390 540 1900 200
+shot 27-nach-home-geste 3
 adb shell dumpsys package $PKG | grep -E "versionCode|versionName" > $OUT/version.txt || true
 
 adb logcat -d -b crash > $OUT/crash.txt || true
