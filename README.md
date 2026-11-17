@@ -37,7 +37,16 @@ Die Symbolgröße ist frei einstellbar, damit sie zu deinem bisherigen Launcher 
 
 Nicht übernehmbar: Xiaomi-eigene Spezial-Widgets (MAML/„Gadgets“) und Einstellungen *innerhalb* von Widgets (z. B. die Stadt beim Wetter) – die einmal neu wählen.
 
-## Wischgesten statt 3 Tasten (Xiaomi)
+## iOS überall: Gestenleiste, Kontrollzentrum, Dynamic Island
+
+Launcher-Einstellungen → **iOS überall (in allen Apps)**. Dafür einmal die Bedienungshilfe „Clean Launcher – Gesten“ einschalten
+(falls der Schalter grau ist: App-Info → ⋮ → „Eingeschränkte Einstellungen zulassen“).
+
+- **Gestenleiste statt 3 Tasten:** liegt über den Tasten. Hochwischen = Home, hochwischen & halten = Übersicht, seitlich = letzte App, vom linken/rechten Rand nach innen = Zurück. Funktioniert ohne PC.
+- **Kontrollzentrum & Mitteilungszentrale:** von oben runterwischen – links Mitteilungen, rechts Kontrollzentrum (WLAN, Bluetooth, Flugmodus, Daten, Musik, Drehsperre, Nicht stören, Taschenlampe, Kamera, Helligkeit, Lautstärke, Wecker, Timer, Rechner).
+- **Dynamic Island:** immer sichtbar um die Kamera; zeigt Musik, Laden und neue Mitteilungen. Antippen öffnet die Musiksteuerung bzw. die Mitteilung. Breite und Position einstellbar.
+
+## Original Xiaomi-Gesten (optional, per PC)
 
 MIUI/HyperOS schaltet die Vollbild-Gesten ab, sobald ein anderer Launcher aktiv ist. Einmalig per PC freischalten:
 
