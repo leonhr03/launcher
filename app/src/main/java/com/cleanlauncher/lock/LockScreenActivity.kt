@@ -280,7 +280,7 @@ fun LockScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Column(Modifier.fillMaxWidth().then(unlockDrag), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(if (prefs.dynamicIsland) 34.dp else 10.dp))
             Padlock(open = unlocked, modifier = Modifier.size(22.dp, 26.dp))
             Spacer(Modifier.height(8.dp))
             val locale = Locale.getDefault()
