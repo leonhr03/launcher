@@ -165,7 +165,7 @@ adb shell input swipe 540 2390 540 1900 200
 shot 21-nach-home-geste 3
 
 # ---------- Sperrbildschirm sofort (Overlay) + Sicherung ----------
-adb shell am start -W -n $PKG/.SettingsActivity --ez preview_lock true
+adb shell am start -W --activity-clear-task -n $PKG/.SettingsActivity --ez preview_lock true
 shot 22-sperrbildschirm-sofort 3
 adb shell input swipe 540 2250 540 900 250
 shot 23-nach-entsperren 3
