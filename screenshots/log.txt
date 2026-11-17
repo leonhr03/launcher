@@ -1,0 +1,200 @@
+11-17 05:58:14.676   522  2510 D CoreBackPreview: Window{9e6498f u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@3708252, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:14.934   522  2510 D CoreBackPreview: Window{887efab u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@c08a923, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:14.961   522  2510 D CoreBackPreview: Window{f53db87 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b70719e, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:15.721  6647  6647 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+11-17 05:58:15.725  6647  6647 I AndroidRuntime: Using default boot image
+11-17 05:58:15.726  6647  6647 I AndroidRuntime: Leaving lock profiling enabled
+11-17 05:58:15.829  6647  6647 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+11-17 05:58:15.835   522  1855 W InputManager-JNI: Input channel object 'f53db87 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:15.837   522  1855 W InputManager-JNI: Input channel object '887efab com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:15.838   522  1855 W InputManager-JNI: Input channel object '9e6498f com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:15.845   522  2468 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:15.846   522  2468 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:15.847   522  2067 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:16.869  6647  6647 D AndroidRuntime: Shutting down VM
+11-17 05:58:16.912   522  1855 D CoreBackPreview: Window{b7c24aa u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b440c49, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:16.938   522  2405 D CoreBackPreview: Window{7cfe176 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@12da94e, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:16.948   522   536 D CoreBackPreview: Window{8d09f02 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a5b0a6f, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:17.841   522  1855 D CoreBackPreview: Window{51a4b68 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@f41807b, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:17.925   522  2067 D CoreBackPreview: Window{cfcb614 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@e2b5e98, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:17.996   522  1855 D CoreBackPreview: Window{df91f80 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@d9c6f1, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:18.048   522  1855 D CoreBackPreview: Window{790b3ac u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@6bd52d6, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:18.118   522  1855 D CoreBackPreview: Window{b7c24aa u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:18.118   522  1855 W InputManager-JNI: Input channel object 'b7c24aa com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:18.130   522  1855 D CoreBackPreview: Window{7cfe176 u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:18.131   522  1855 W InputManager-JNI: Input channel object '7cfe176 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:18.133   522  1855 D CoreBackPreview: Window{8d09f02 u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:18.133   522  1855 W InputManager-JNI: Input channel object '8d09f02 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:18.875  6676  6676 D AndroidRuntime: >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+11-17 05:58:18.880  6676  6676 I AndroidRuntime: Using default boot image
+11-17 05:58:18.880  6676  6676 I AndroidRuntime: Leaving lock profiling enabled
+11-17 05:58:18.981  6676  6676 D AndroidRuntime: Calling main entry com.android.commands.uiautomator.Launcher
+11-17 05:58:19.007   522  2405 D CoreBackPreview: Window{51a4b68 u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:19.016   522  1855 W InputManager-JNI: Input channel object '790b3ac com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:19.017   522  1855 W InputManager-JNI: Input channel object 'df91f80 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:19.018   522  1855 W InputManager-JNI: Input channel object 'cfcb614 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:19.019   522  1855 W InputManager-JNI: Input channel object '51a4b68 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:19.041   522   536 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:19.044   522   536 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:19.044   522   536 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:20.043  6676  6676 D AndroidRuntime: Shutting down VM
+11-17 05:58:20.079   522  2405 D CoreBackPreview: Window{f3e1dc2 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@d8d007d, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:20.100   522  2405 D CoreBackPreview: Window{383aa09 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@8dd7b72, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:20.107   522  2203 D CoreBackPreview: Window{a5efc3c u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@e167bc3, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:20.185   522  2203 D CoreBackPreview: Window{6b48e4b u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@51a4c40, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.011   522  2203 D CoreBackPreview: Window{829a03b u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@97fc046, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.113   522  2405 D CoreBackPreview: Window{3080517 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@41e6207, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.167   522  2405 D CoreBackPreview: Window{4fddbb3 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@b380f34, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.248   522  2405 D CoreBackPreview: Window{b70800f u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1b8815d, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.320   522  1855 D CoreBackPreview: Window{abf0e2b u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@de79ad2, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:21.424   522  1855 D CoreBackPreview: Window{f3e1dc2 u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:21.425   522  1855 W InputManager-JNI: Input channel object 'f3e1dc2 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:21.427   522  1855 D CoreBackPreview: Window{383aa09 u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:21.428   522  1855 W InputManager-JNI: Input channel object '383aa09 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:21.429   522  1855 D CoreBackPreview: Window{a5efc3c u0 com.cleanlauncher}: Setting back callback null
+11-17 05:58:21.430   522  1855 W InputManager-JNI: Input channel object 'a5efc3c com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:21.432   522  2405 W InputManager-JNI: Input channel object '6b48e4b com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:21.451   522  1855 I WindowManager: setOnBackInvokedCallback(): No window state for package:com.cleanlauncher
+11-17 05:58:24.275   839   871 V WindowManagerShell: Transition requested: android.os.BinderProxy@af95f80 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=16 displayId=0 isRunning=true baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10800100 cmp=com.cleanlauncher/.MainActivity } baseActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} topActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} origActivity=null realActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} numActivities=1 lastActiveTime=199640 supportsMultiWindow=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@446d9b9} topActivityType=2 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{69741fe com.cleanlauncher.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=false isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-17 05:58:24.277   522   540 I ActivityTaskManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000100 cmp=com.cleanlauncher/.MainActivity (has extras)} with LAUNCH_SINGLE_TASK from uid 0 (BAL_ALLOW_ALLOWLISTED_UID) result code=2
+11-17 05:58:24.280   839   871 D WindowManagerShell: onActivityRestartAttempt: ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity}
+11-17 05:58:24.455   522   539 V WindowManager: Sent Transition #21 createdAt=11-17 05:58:24.271 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=16 displayId=0 isRunning=true baseIntent=Intent { act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10800100 cmp=com.cleanlauncher/.MainActivity } baseActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} topActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} origActivity=null realActivity=ComponentInfo{com.cleanlauncher/com.cleanlauncher.MainActivity} numActivities=1 lastActiveTime=199640 supportsMultiWindow=false resizeMode=0 isResizeable=false minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{398b615 Task{a792d8b #16 type=home I=com.cleanlauncher/.MainActivity}}} topActivityType=2 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=null topActivityInfo=ActivityInfo{f1aa1d com.cleanlauncher.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=false isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-17 05:58:24.455   522   539 V WindowManager:     info={id=21 t=OPEN f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{93b857 Task{4ce6e61 #14 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER|MOVE_TO_TOP leash=Surface(name=Task=14)/@0xbb35f75 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{209c3cc Task{975782d #17 type=standard A=10192:com.cleanlauncher.settings}}} m=TO_BACK f=NONE leash=Surface(name=Task=17)/@0xe87ec6e sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{39e12ac token=android.os.Binder@39e8e80})/@0x28a700 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-17 05:58:24.492   522  2468 I ImeTracker: com.cleanlauncher:6e14460e: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-17 05:58:24.492   522  2468 I ImeTracker: com.cleanlauncher:6e14460e: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-17 05:58:24.493  1567  1567 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.cleanlauncher fieldId=0 fieldName=null extras=null}, false)
+11-17 05:58:34.858  6419  6419 D AndroidRuntime: Shutting down VM
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: FATAL EXCEPTION: main
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: Process: com.cleanlauncher, PID: 6419
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: java.lang.IllegalStateException: ViewTreeLifecycleOwner not found from w1.n{713bf8f V.E...... ......I. 0,0-0,0}
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at S1.e.b0(Unknown Source:2)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at w0.a.f(Unknown Source:373)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at w0.a.c(Unknown Source:8)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at w0.a.onAttachedToWindow(Unknown Source:16)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.View.dispatchAttachedToWindow(View.java:21980)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3490)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3497)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.ViewRootImpl.performTraversals(ViewRootImpl.java:3014)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.ViewRootImpl.doTraversal(ViewRootImpl.java:2465)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.ViewRootImpl$TraversalRunnable.run(ViewRootImpl.java:9305)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1339)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.Choreographer.doFrame(Choreographer.java:882)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:294)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8177)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-17 05:58:34.858  6419  6419 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:971)
+11-17 05:58:34.863   522   536 W ActivityTaskManager:   Not force finishing home activity com.cleanlauncher/.MainActivity
+11-17 05:58:34.863   522   536 W ActivityTaskManager:   Not force finishing home activity com.cleanlauncher/.MainActivity
+11-17 05:58:34.863   522   536 W ActivityTaskManager:   Force finishing activity com.cleanlauncher/.SettingsActivity
+11-17 05:58:34.865   522   536 I ActivityTaskManager: Clearing package preferred activities from com.cleanlauncher
+11-17 05:58:34.898   522  2205 I ImeTracker: com.cleanlauncher:ec3166d7: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+11-17 05:58:34.898   522  2205 I ImeTracker: com.cleanlauncher:ec3166d7: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-17 05:58:34.898   522  2461 I ActivityManager: Process com.cleanlauncher (pid 6419) has died: fg  TOP 
+11-17 05:58:34.900   522   535 D NotificationListeners: Removing active service ComponentInfo{com.cleanlauncher/com.cleanlauncher.system.NotificationService}
+11-17 05:58:34.900   522   522 V NotificationListeners: 0 notification listener connection lost: ComponentInfo{com.cleanlauncher/com.cleanlauncher.system.NotificationService}
+11-17 05:58:34.910   522  1092 I WindowManager: WIN DEATH: Window{abf0e2b u0 com.cleanlauncher}
+11-17 05:58:34.910   522  1092 W InputManager-JNI: Input channel object 'abf0e2b com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.917   522  2472 I WindowManager: WIN DEATH: Window{4fddbb3 u0 com.cleanlauncher}
+11-17 05:58:34.918   522  2472 W InputManager-JNI: Input channel object '4fddbb3 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.919   522  2497 I WindowManager: WIN DEATH: Window{829a03b u0 com.cleanlauncher}
+11-17 05:58:34.919   522  2497 W InputManager-JNI: Input channel object '829a03b com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.923   522   901 I WindowManager: WIN DEATH: Window{3080517 u0 com.cleanlauncher}
+11-17 05:58:34.923   522   901 W InputManager-JNI: Input channel object '3080517 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.930   522   596 I WindowManager: WIN DEATH: Window{b70800f u0 com.cleanlauncher}
+11-17 05:58:34.930   522   596 W InputManager-JNI: Input channel object 'b70800f com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.935   522  2083 I WindowManager: WIN DEATH: Window{272fc65 u0 com.cleanlauncher}
+11-17 05:58:34.935   522  2083 W InputManager-JNI: Input channel object '272fc65 com.cleanlauncher (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.941   522   543 W WindowManager: Failed to deliver inset control state change to w=Window{caacfa4 u0 com.cleanlauncher/com.cleanlauncher.MainActivity}
+11-17 05:58:34.941   522  1415 I WindowManager: WIN DEATH: Window{9b7675b u0 com.cleanlauncher/com.cleanlauncher.SettingsActivity}
+11-17 05:58:34.941   522  1415 W InputManager-JNI: Input channel object '9b7675b com.cleanlauncher/com.cleanlauncher.SettingsActivity (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.942   522  1855 I WindowManager: WIN DEATH: Window{caacfa4 u0 com.cleanlauncher/com.cleanlauncher.MainActivity}
+11-17 05:58:34.942   522  1855 W InputManager-JNI: Input channel object 'caacfa4 com.cleanlauncher/com.cleanlauncher.MainActivity (client)' was disposed without first being removed with the input manager!
+11-17 05:58:34.943   522  2461 W ActivityManager: Scheduling restart of crashed service com.cleanlauncher/.system.NotificationService in 1000ms for connection
+11-17 05:58:34.947   522  2461 W ActivityManager: Scheduling restart of crashed service com.cleanlauncher/.system.LauncherAccessibilityService in 10996ms for connection
+11-17 05:58:35.043   522   548 W UsageStatsService: Unexpected activity event reported! (com.cleanlauncher/com.cleanlauncher.SettingsActivity event : 23 instanceId : 24121698)
+11-17 05:58:35.047   522   550 I ActivityManager: Start proc 6738:com.cleanlauncher/u0a192 for top-activity {com.cleanlauncher/com.cleanlauncher.MainActivity}
+11-17 05:58:35.064  6738  6738 I m.cleanlauncher: Using CollectorTypeCC GC.
+11-17 05:58:35.065  6738  6738 W m.cleanlauncher: Unexpected CPU variant for x86: x86_64.
+11-17 05:58:35.065  6738  6738 W m.cleanlauncher: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+11-17 05:58:35.067  6738  6738 E m.cleanlauncher: Not starting debugger since process cannot load the jdwp agent.
+11-17 05:58:35.094  6738  6738 D nativeloader: Configuring clns-6 for other apk /data/app/~~_UGdwBqWm-fOkhNR65oiTQ==/com.cleanlauncher-vj_CoyPqyNxNKj-U2IgF9A==/base.apk. target_sdk_version=35, uses_libraries=, library_path=/data/app/~~_UGdwBqWm-fOkhNR65oiTQ==/com.cleanlauncher-vj_CoyPqyNxNKj-U2IgF9A==/lib/x86_64:/data/app/~~_UGdwBqWm-fOkhNR65oiTQ==/com.cleanlauncher-vj_CoyPqyNxNKj-U2IgF9A==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/com.cleanlauncher
+11-17 05:58:35.097  6738  6738 V GraphicsEnvironment: ANGLE GameManagerService for com.cleanlauncher: false
+11-17 05:58:35.097  6738  6738 V GraphicsEnvironment: com.cleanlauncher is not listed in per-application setting
+11-17 05:58:35.133   522   522 V NotificationListeners: 0 notification listener service connected: ComponentInfo{com.cleanlauncher/com.cleanlauncher.system.NotificationService}
+11-17 05:58:35.182   522  2474 D CoreBackPreview: Window{a453987 u0 com.cleanlauncher/com.cleanlauncher.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@fb1d27f, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:37.153   522  2203 I ImeTracker: com.cleanlauncher:86b302bb: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-17 05:58:37.153   522  2203 I ImeTracker: com.cleanlauncher:86b302bb: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-17 05:58:37.158  1567  1567 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1877 onStartInput(EditorInfo{inputType=0x0(NULL) imeOptions=0x0 privateImeOptions=null actionName=UNSPECIFIED actionLabel=null actionId=0 initialSelStart=-1 initialSelEnd=-1 initialCapsMode=0x0 hintText=null label=null packageName=com.cleanlauncher fieldId=0 fieldName=null extras=null}, false)
+11-17 05:58:37.474   522  2203 D CoreBackPreview: Window{c8c50b9 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@f92886, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:37.606   522  2203 D CoreBackPreview: Window{47f7b u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@2134547, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:37.668   522  2203 D CoreBackPreview: Window{7f28f44 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a5e369d, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:37.813   522   820 D CoreBackPreview: Window{85da29 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@66510e0, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:37.979   522  2203 D CoreBackPreview: Window{178efe5 u0 com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@1a2bf36, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:40.691  6738  6795 D ProfileInstaller: Skipping profile installation for com.cleanlauncher
+11-17 05:58:41.208  6738  6738 D AndroidRuntime: Shutting down VM
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: FATAL EXCEPTION: main
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: Process: com.cleanlauncher, PID: 6738
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: java.lang.IllegalStateException: ViewTreeLifecycleOwner not found from w1.n{80cc627 V.E...... ......I. 0,0-0,0}
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at S1.e.b0(Unknown Source:2)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at w0.a.f(Unknown Source:373)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at w0.a.c(Unknown Source:8)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at w0.a.onAttachedToWindow(Unknown Source:16)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.View.dispatchAttachedToWindow(View.java:21980)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3490)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.ViewGroup.dispatchAttachedToWindow(ViewGroup.java:3497)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.ViewRootImpl.performTraversals(ViewRootImpl.java:3014)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.ViewRootImpl.doTraversal(ViewRootImpl.java:2465)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.ViewRootImpl$TraversalRunnable.run(ViewRootImpl.java:9305)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1339)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.Choreographer.doFrame(Choreographer.java:882)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:294)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8177)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
+11-17 05:58:41.209  6738  6738 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:971)
+11-17 05:58:41.212   522  2510 W ActivityTaskManager:   Not force finishing home activity com.cleanlauncher/.MainActivity
+11-17 05:58:41.212   522  2510 W ActivityTaskManager:   Not force finishing home activity com.cleanlauncher/.MainActivity
+11-17 05:58:41.212   522  2510 I ActivityTaskManager: Clearing package preferred activities from com.cleanlauncher
+11-17 05:58:41.213   522   540 I ActivityManager: Showing crash dialog for package com.cleanlauncher u0
+11-17 05:58:41.230   522   540 D CoreBackPreview: Window{ec88498 u0 Application Error: com.cleanlauncher}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.WindowOnBackInvokedDispatcher$OnBackInvokedCallbackWrapper@2d7bc62, mPriority=0, mIsAnimationCallback=false}
+11-17 05:58:46.218   522   624 W InputDispatcher: Window 85da29 com.cleanlauncher (server) is unresponsive: 85da29 com.cleanlauncher (server) is not responding. Waited 5004ms for MotionEvent(deviceId=-1, eventTime=216574000000, source=TOUCHSCREEN, displayId=0, action=MOVE, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (900.0, 143.0)]), policyFlags=0x6b000000
+11-17 05:58:46.218   522   624 W InputDispatcher: Canceling events for 85da29 com.cleanlauncher (server) because it is unresponsive
+11-17 05:58:46.219   522   624 I WindowManager: ANR in Window{85da29 u0 com.cleanlauncher}. Reason:Input dispatching timed out (85da29 com.cleanlauncher (server) is not responding. Waited 5004ms for MotionEvent(deviceId=-1, eventTime=216574000000, source=TOUCHSCREEN, displayId=0, action=MOVE, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (900.0, 143.0)]), policyFlags=0x6b000000)
+11-17 05:58:46.224  6738  6741 I m.cleanlauncher: Thread[2,tid=6741,WaitingInMainSignalCatcherLoop,Thread*=0x73e2ee80eb20,peer=0x12d00330,"Signal Catcher"]: reacting to signal 3
+11-17 05:58:46.224  6738  6741 I m.cleanlauncher: 
+11-17 05:58:46.246   522  6810 I ActivityManager: Crashing app skipping ANR: com.android.server.am.ProcessErrorStateRecord@c1f6c7a Input dispatching timed out (85da29 com.cleanlauncher (server) is not responding. Waited 5004ms for MotionEvent(deviceId=-1, eventTime=216574000000, source=TOUCHSCREEN, displayId=0, action=MOVE, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (900.0, 143.0)]), policyFlags=0x6b000000)
+11-17 05:58:46.246   522  6810 D ActivityManager: Completed ANR of com.cleanlauncher in 8ms, latency 18ms
+11-17 05:58:46.273  6738  6741 I m.cleanlauncher: Wrote stack traces to tombstoned
+11-17 05:59:04.038  6738  6744 W m.cleanlauncher: Cleared Reference was only reachable from finalizer (only reported once)
+11-17 05:59:19.617   522   624 W InputDispatcher: Window a453987 com.cleanlauncher/com.cleanlauncher.MainActivity (server) is unresponsive: a453987 com.cleanlauncher/com.cleanlauncher.MainActivity (server) is not responding. Waited 5002ms for KeyEvent(deviceId=-1, eventTime=249980000000, source=UNKNOWN, displayId=-1, action=DOWN, flags=0x00000000, keyCode=BACK(4), scanCode=0, metaState=0x00000000, repeatCount=0), policyFlags=0x6b000000
+11-17 05:59:19.617   522   624 W InputDispatcher: Canceling events for a453987 com.cleanlauncher/com.cleanlauncher.MainActivity (server) because it is unresponsive
+11-17 05:59:19.618   522   624 I WindowManager: ANR in Window{a453987 u0 com.cleanlauncher/com.cleanlauncher.MainActivity}. Reason:Input dispatching timed out (a453987 com.cleanlauncher/com.cleanlauncher.MainActivity (server) is not responding. Waited 5002ms for KeyEvent(deviceId=-1, eventTime=249980000000, source=UNKNOWN, displayId=-1, action=DOWN, flags=0x00000000, keyCode=BACK(4), scanCode=0, metaState=0x00000000, repeatCount=0), policyFlags=0x6b000000)
+11-17 05:59:19.620  6738  6741 I m.cleanlauncher: Thread[2,tid=6741,WaitingInMainSignalCatcherLoop,Thread*=0x73e2ee80eb20,peer=0x13400130,"Signal Catcher"]: reacting to signal 3
+11-17 05:59:19.620  6738  6741 I m.cleanlauncher: 
+11-17 05:59:19.637   522  6839 I ActivityManager: Crashing app skipping ANR: com.android.server.am.ProcessErrorStateRecord@c1f6c7a Input dispatching timed out (a453987 com.cleanlauncher/com.cleanlauncher.MainActivity (server) is not responding. Waited 5002ms for KeyEvent(deviceId=-1, eventTime=249980000000, source=UNKNOWN, displayId=-1, action=DOWN, flags=0x00000000, keyCode=BACK(4), scanCode=0, metaState=0x00000000, repeatCount=0), policyFlags=0x6b000000)
+11-17 05:59:19.637   522  6839 D ActivityManager: Completed ANR of com.cleanlauncher in 11ms, latency 8ms
+11-17 05:59:19.650  6738  6741 I m.cleanlauncher: Wrote stack traces to tombstoned
+11-17 05:59:47.152   522   542 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{e88375a u0 com.cleanlauncher/.MainActivity t16}
+11-17 05:59:47.152   522   542 W ActivityTaskManager: Activity pause timeout for ActivityRecord{e88375a u0 com.cleanlauncher/.MainActivity t16}
+11-17 05:59:56.130   522   624 W InputDispatcher: Window c8c50b9 com.cleanlauncher (server) is unresponsive: c8c50b9 com.cleanlauncher (server) is not responding. Waited 5003ms for MotionEvent(deviceId=-1, eventTime=286492000000, source=TOUCHSCREEN, displayId=0, action=DOWN, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (540.0, 2390.0)]), policyFlags=0x6b000000
+11-17 05:59:56.130   522   624 W InputDispatcher: Canceling events for c8c50b9 com.cleanlauncher (server) because it is unresponsive
+11-17 05:59:56.131   522   624 I WindowManager: ANR in Window{c8c50b9 u0 com.cleanlauncher}. Reason:Input dispatching timed out (c8c50b9 com.cleanlauncher (server) is not responding. Waited 5003ms for MotionEvent(deviceId=-1, eventTime=286492000000, source=TOUCHSCREEN, displayId=0, action=DOWN, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (540.0, 2390.0)]), policyFlags=0x6b000000)
+11-17 05:59:56.134  6738  6741 I m.cleanlauncher: Thread[2,tid=6741,WaitingInMainSignalCatcherLoop,Thread*=0x73e2ee80eb20,peer=0x13400130,"Signal Catcher"]: reacting to signal 3
+11-17 05:59:56.134  6738  6741 I m.cleanlauncher: 
+11-17 05:59:56.158   522  6878 I ActivityManager: Crashing app skipping ANR: com.android.server.am.ProcessErrorStateRecord@c1f6c7a Input dispatching timed out (c8c50b9 com.cleanlauncher (server) is not responding. Waited 5003ms for MotionEvent(deviceId=-1, eventTime=286492000000, source=TOUCHSCREEN, displayId=0, action=DOWN, actionButton=0x00000000, flags=0x00000000, metaState=0x00000000, buttonState=0x00000000, classification=NONE, edgeFlags=0x00000000, xPrecision=1.0, yPrecision=1.0, xCursorPosition=nan, yCursorPosition=nan, pointers=[0: (540.0, 2390.0)]), policyFlags=0x6b000000)
+11-17 05:59:56.158   522  6878 D ActivityManager: Completed ANR of com.cleanlauncher in 12ms, latency 14ms
+11-17 05:59:56.175  6738  6741 I m.cleanlauncher: Wrote stack traces to tombstoned
+11-17 05:59:58.898   522   542 W ActivityTaskManager: Activity stop timeout for ActivityRecord{e88375a u0 com.cleanlauncher/.MainActivity t16}
