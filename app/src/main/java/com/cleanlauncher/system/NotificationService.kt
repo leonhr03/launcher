@@ -22,6 +22,12 @@ data class Notif(
 )
 
 object NotificationRepo {
+    /** Zuletzt eingetroffene (laute) Mitteilung – für die Dynamic Island. */
+    var lastPosted by mutableStateOf<Notif?>(null)
+        internal set
+    var postedTick by mutableStateOf(0)
+        internal set
+
     var list by mutableStateOf<List<Notif>>(emptyList())
         internal set
     var counts by mutableStateOf<Map<String, Int>>(emptyMap())
@@ -29,6 +35,20 @@ object NotificationRepo {
 
     fun hasAccess(context: Context): Boolean =
         NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
+
+    fun dismissAll() {
+        try {
+            NotificationService.instance?.cancelAllNotifications()
+        } catch (_: Exception) {
+        }
+    }
+
+    fun open(n: Notif) {
+        try {
+            n.contentIntent?.send()
+        } catch (_: Exception) {
+        }
+    }
 
     fun dismiss(n: Notif) {
         try {
@@ -44,13 +64,41 @@ class NotificationService : NotificationListenerService() {
     override fun onListenerConnected() {
         instance = this
         refresh()
+        MediaRepo.init(this)
     }
 
     override fun onListenerDisconnected() {
         if (instance === this) instance = null
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification?) = refresh()
+    override fun onNotificationPosted(sbn: StatusBarNotification?) {
+        val known = NotificationRepo.list.any { it.key == sbn?.key }
+        refresh()
+        if (sbn == null || known || sbn.isOngoing || sbn.packageName == packageName) return
+        if ((sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
+        val important = try {
+            val r = Ranking()
+            currentRanking.getRanking(sbn.key, r) && r.importance >= android.app.NotificationManager.IMPORTANCE_DEFAULT
+        } catch (e: Exception) {
+            true
+        }
+        if (!important) return
+        NotificationRepo.lastPosted = toNotif(sbn)
+        NotificationRepo.postedTick++
+    }
+
+    private fun toNotif(sbn: StatusBarNotification): Notif {
+        val ex = sbn.notification.extras
+        return Notif(
+            key = sbn.key,
+            pkg = sbn.packageName,
+            title = ex.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty(),
+            text = (ex.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty(),
+            time = sbn.postTime,
+            contentIntent = sbn.notification.contentIntent,
+            clearable = sbn.isClearable,
+        )
+    }
     override fun onNotificationRemoved(sbn: StatusBarNotification?) = refresh()
 
     private fun refresh() {
@@ -64,18 +112,7 @@ class NotificationService : NotificationListenerService() {
             (n.flags and Notification.FLAG_GROUP_SUMMARY) == 0 && sbn.packageName != packageName
         }
         NotificationRepo.counts = relevant.filter { !it.isOngoing }.groupingBy { it.packageName }.eachCount()
-        NotificationRepo.list = relevant.filter { !it.isOngoing }.sortedByDescending { it.postTime }.map { sbn ->
-            val ex = sbn.notification.extras
-            Notif(
-                key = sbn.key,
-                pkg = sbn.packageName,
-                title = ex.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty(),
-                text = (ex.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty(),
-                time = sbn.postTime,
-                contentIntent = sbn.notification.contentIntent,
-                clearable = sbn.isClearable,
-            )
-        }
+        NotificationRepo.list = relevant.filter { !it.isOngoing }.sortedByDescending { it.postTime }.map { toNotif(it) }
     }
 
     companion object {

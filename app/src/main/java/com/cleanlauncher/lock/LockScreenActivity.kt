@@ -120,6 +120,7 @@ class LockScreenActivity : ComponentActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
         }
         AppRepository.init(this)
+        com.cleanlauncher.system.MediaRepo.init(this)
         WallpaperRepo.init(this)
         unlocked = !km.isKeyguardLocked
         val f = IntentFilter().apply {
@@ -301,12 +302,29 @@ private fun LockScreen(
             // Mitteilungen
             val notifs = if (prefs.lockNotifications) NotificationRepo.list else emptyList()
             Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (notifs.isEmpty()) {
+                    Column(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp)) {
+                        com.cleanlauncher.ui.MediaPlayerCard(prefs)
+                        if (prefs.lockNotifications && !com.cleanlauncher.system.NotificationRepo.hasAccess(ctx)) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Mitteilungen erscheinen hier, sobald du in den Launcher-Einstellungen den Mitteilungszugriff erlaubst.",
+                                color = Color.White.copy(alpha = 0.85f),
+                                fontSize = 13.sp,
+                                modifier = Modifier
+                                    .frosted(RoundedCornerShape(18.dp), Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.2f), prefs.glass)
+                                    .padding(14.dp),
+                            )
+                        }
+                    }
+                }
                 if (notifs.isNotEmpty()) {
                     LazyColumn(
                         Modifier.fillMaxSize().padding(horizontal = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Bottom),
                         reverseLayout = false,
                     ) {
+                        if (com.cleanlauncher.system.MediaRepo.active) item(key = "media") { com.cleanlauncher.ui.MediaPlayerCard(prefs) }
                         items(notifs.take(20), key = { it.key }) { n ->
                             NotificationCard(prefs, n, hideContent = prefs.lockHideContent && !unlocked) { onOpenNotification(n) }
                         }

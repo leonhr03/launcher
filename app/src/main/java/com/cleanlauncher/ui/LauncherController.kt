@@ -133,6 +133,8 @@ class LauncherController(val context: Context, val prefs: Prefs) {
             GestureAction.LAUNCHER_SETTINGS -> openSettings()
             GestureAction.LOCK_SCREEN -> SystemActions.lockScreen(context)
             GestureAction.RECENTS -> SystemActions.recents(context)
+            GestureAction.NOTIFICATION_CENTER -> SystemActions.showShade(context, ShadeKind.NOTIFICATIONS)
+            GestureAction.CONTROL_CENTER -> SystemActions.showShade(context, ShadeKind.CONTROLS)
         }
     }
 

@@ -144,6 +144,7 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit, autoImport:
                 }
             }
 
+            SystemWideSection(prefs)
             ImportSection(prefs, autoImport)
             GestureNavSection()
 
@@ -990,7 +991,7 @@ private fun GestureNavSection() {
     }
     if (!isXiaomi && !forced && !canWrite) return
 
-    Section("Wischgesten statt 3 Tasten")
+    Section("Original Xiaomi-Gesten (optional, per PC)")
     Group {
         if (canWrite) {
             SwitchRow("Xiaomi-Wischgesten mit diesem Launcher", forced, "Danach in den Systemeinstellungen „Vollbild-Gesten“ wählen") {
@@ -1024,5 +1025,87 @@ private fun GestureNavSection() {
                 "Entwickleroptionen → USB-Debugging an, Handy per Kabel an den PC, und dort die zwei kopierten Befehle ausführen " +
                 "(Programm „adb“ / Android Platform-Tools). Das musst du nur einmal machen. Danach unter Systemnavigation „Gesten“ wählen.",
         )
+    }
+}
+
+
+// ======================= iOS überall (Bedienungshilfe) =======================
+
+@Composable
+private fun SystemWideSection(prefs: Prefs) {
+    val ctx = LocalContext.current
+    val tick = resumeTick()
+    val active = remember(tick) { SystemActions.accessibilityEnabled }
+    val canWrite = remember(tick) { android.provider.Settings.System.canWrite(ctx) }
+    val dndAccess = remember(tick) {
+        ctx.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted
+    }
+    val notifAccess = remember(tick) { com.cleanlauncher.system.NotificationRepo.hasAccess(ctx) }
+
+    Section("iOS überall (in allen Apps)")
+    Group {
+        ActionRow(
+            if (active) "✓ Bedienungshilfe aktiv" else "① Bedienungshilfe einschalten",
+            if (active) "Gestenleiste, Kontrollzentrum & Dynamic Island können laufen"
+            else "Installierte Apps → „Clean Launcher – Gesten“ → An",
+            highlight = !active,
+        ) { SystemActions.openAccessibilitySettings(ctx) }
+        if (!active) {
+            Divider()
+            ActionRow(
+                "Schalter grau / „Eingeschränkte Einstellung“?",
+                "App-Info → oben rechts ⋮ → „Eingeschränkte Einstellungen zulassen“",
+            ) { openSafe(ctx, appDetails(ctx)) }
+        }
+        Divider()
+        SwitchRow("Gestenleiste statt 3 Tasten", prefs.gestureBar, "Hochwischen = Home, hochwischen & halten = Übersicht") { prefs.gestureBar = it }
+        if (prefs.gestureBar) {
+            Divider()
+            SwitchRow("Vom Rand wischen = Zurück", prefs.gestureBack, "Links oder rechts vom Bildschirmrand nach innen wischen") { prefs.gestureBack = it }
+            Divider()
+            SwitchRow("Seitlich über die Leiste = letzte App", prefs.gestureSwitchApps) { prefs.gestureSwitchApps = it }
+            Divider()
+            SwitchRow("Dunkle Leiste", prefs.gestureBarDark, "Aus = helle Leiste mit dunklem Strich") { prefs.gestureBarDark = it }
+        }
+        Divider()
+        SwitchRow(
+            "Kontrollzentrum & Mitteilungen",
+            prefs.iosShade,
+            "Von oben runterwischen: links = Mitteilungen, rechts = Kontrollzentrum",
+        ) { prefs.iosShade = it }
+        Divider()
+        SwitchRow("Dynamic Island", prefs.dynamicIsland, "Immer sichtbar – zeigt Musik, Laden und neue Mitteilungen") { prefs.dynamicIsland = it }
+        if (prefs.dynamicIsland) {
+            Divider()
+            IntSlider("Island-Breite", prefs.islandWidth, 60..200, suffix = " dp") { prefs.islandWidth = it }
+            Divider()
+            IntSlider("Island-Position (runter)", prefs.islandOffsetY, -10..40, suffix = " dp") { prefs.islandOffsetY = it }
+        }
+    }
+    if (prefs.iosShade || prefs.dynamicIsland || prefs.gestureBar) {
+        Section("Berechtigungen fürs Kontrollzentrum")
+        Group {
+            ActionRow(
+                if (notifAccess) "✓ Mitteilungszugriff" else "Mitteilungszugriff erlauben",
+                "Mitteilungen, Musik-Steuerung und Dynamic Island",
+                highlight = !notifAccess,
+            ) { openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
+            Divider()
+            ActionRow(
+                if (canWrite) "✓ Helligkeit & Drehsperre" else "Helligkeit & Drehsperre erlauben",
+                "„Systemeinstellungen ändern“",
+            ) {
+                openSafe(
+                    ctx,
+                    android.content.Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS, android.net.Uri.parse("package:" + ctx.packageName)),
+                    appDetails(ctx),
+                )
+            }
+            Divider()
+            ActionRow(if (dndAccess) "✓ Nicht stören" else "„Nicht stören“ erlauben", "Zugriff auf „Bitte nicht stören“") {
+                openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS))
+            }
+        }
+        Footer("Die Gestenleiste liegt über den 3 Tasten und versteckt sie. Wenn du sie wieder loswerden willst: hier ausschalten oder die Bedienungshilfe deaktivieren.")
     }
 }

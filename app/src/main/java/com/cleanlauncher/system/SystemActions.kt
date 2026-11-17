@@ -11,14 +11,25 @@ import android.widget.Toast
 
 /** Optionale Bedienungshilfe – nur für "Bildschirm sperren", "Benachrichtigungen" und "Letzte Apps". */
 class LauncherAccessibilityService : AccessibilityService() {
+    var overlays: OverlayManager? = null
+        private set
+
     override fun onServiceConnected() {
         instance = this
+        overlays = OverlayManager(this).also { it.start() }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        overlays?.onConfigurationChanged()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
     override fun onInterrupt() {}
 
     override fun onDestroy() {
+        overlays?.stop()
+        overlays = null
         if (instance === this) instance = null
         super.onDestroy()
     }
@@ -47,6 +58,11 @@ object SystemActions {
             Toast.LENGTH_LONG,
         ).show()
         openAccessibilitySettings(context)
+    }
+
+    fun showShade(context: Context, kind: com.cleanlauncher.ui.ShadeKind) {
+        val o = LauncherAccessibilityService.instance?.overlays
+        if (o != null) o.showShade(kind) else needService(context)
     }
 
     fun lockScreen(context: Context) {

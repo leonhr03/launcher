@@ -31,6 +31,8 @@ enum class GestureAction(val title: String) {
     LAUNCHER_SETTINGS("Launcher-Einstellungen"),
     LOCK_SCREEN("Bildschirm sperren"),
     RECENTS("Zuletzt verwendete Apps"),
+    NOTIFICATION_CENTER("Mitteilungszentrale (iOS)"),
+    CONTROL_CENTER("Kontrollzentrum (iOS)"),
 }
 
 enum class DrawerStyle(val title: String) {
@@ -164,6 +166,16 @@ class Prefs private constructor(context: Context) {
     var lockCamera by bool("lock_camera", true)
     var lockClockColor by int("lock_clock_color", 0xFFFFFFFF.toInt())
     var lockDim by float("lock_dim", 0.1f)
+
+    // ---------- Systemweit (Bedienungshilfe) ----------
+    var gestureBar by bool("gesture_bar", false)
+    var gestureBack by bool("gesture_back", true)
+    var gestureBarDark by bool("gesture_bar_dark", true)
+    var gestureSwitchApps by bool("gesture_switch_apps", true)
+    var iosShade by bool("ios_shade", false)
+    var dynamicIsland by bool("dynamic_island", false)
+    var islandOffsetY by int("island_offset_y", 0)
+    var islandWidth by int("island_width", 110)
 
     // ---------- Gesten ----------
     var swipeUp by enum("gesture_swipe_up", GestureAction.APP_LIBRARY)

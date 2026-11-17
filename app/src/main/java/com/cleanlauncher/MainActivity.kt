@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
         AppRepository.init(this)
         WallpaperRepo.init(this)
         Widgets.init(this)
+        com.cleanlauncher.system.MediaRepo.init(this)
         controller = LauncherController(this, Prefs.get(this))
         controller.requestWidget = { info -> addWidget(info) }
         controller.requestReconfigure = { id -> reconfigure(id) }

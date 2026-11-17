@@ -124,4 +124,40 @@ shot 13-import-seite-2 3
 adb shell input swipe 950 1300 100 1300 250
 shot 14-import-seite-3 3
 
+# ---------- iOS überall: Gestenleiste, Dynamic Island, Kontrollzentrum ----------
+adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
+adb shell settings put secure accessibility_enabled 1
+adb shell pm grant $PKG android.permission.WRITE_SECURE_SETTINGS || true
+adb shell appops set $PKG WRITE_SETTINGS allow
+adb shell cmd notification allow_dnd $PKG || true
+sleep 3
+adb shell am start -S -W -n $PKG/.SettingsActivity
+sleep 4
+shot 15-einstellungen-ios-ueberall 1
+tap_text "Gestenleiste statt 3 Tasten"
+sleep 1
+tap_text "Kontrollzentrum &amp; Mitteilungen"
+sleep 1
+tap_text "Dynamic Island"
+sleep 2
+shot 15b-einstellungen-an 1
+adb shell input keyevent KEYCODE_HOME
+shot 16-island-und-gestenleiste 4
+adb shell cmd notification post -t "Lisa" island1 "Kommst du heute noch vorbei?"
+shot 17-island-mitteilung 1
+sleep 4
+adb shell input swipe 250 15 250 1000 300
+shot 18-mitteilungszentrale 3
+adb shell input keyevent KEYCODE_BACK
+sleep 2
+adb shell input swipe 900 15 900 1000 300
+shot 19-kontrollzentrum 3
+adb shell input keyevent KEYCODE_BACK
+sleep 2
+adb shell am start -W -a android.settings.SETTINGS
+shot 20-in-anderer-app 3
+# Gestenleiste: hochwischen = Home
+adb shell input swipe 540 2390 540 1900 200
+shot 21-nach-home-geste 3
+
 ls -la $OUT
