@@ -239,6 +239,9 @@ class OverlayManager(private val service: AccessibilityService) {
             }
         }
         shadeCloseTick = 0
+        // Compose sucht den Lifecycle am Fenster-Wurzelelement
+        root.setViewTreeLifecycleOwner(owner)
+        root.setViewTreeSavedStateRegistryOwner(owner)
         root.addView(
             composeView {
                 ShadeRoot(
