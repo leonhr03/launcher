@@ -197,7 +197,10 @@ HASH=$(python3 -c "import hashlib;print(hashlib.sha256(b'$SALT:123456').hexdiges
 adb shell am force-stop $PKG
 sleep 1
 adb shell "sed -i 's#</map>#<boolean name=\"lock_enabled\" value=\"true\" /><int name=\"lock_mode\" value=\"1\" /><int name=\"lock_code_length\" value=\"6\" /><string name=\"lock_code_salt\">$SALT</string><string name=\"lock_code_hash\">$HASH</string></map>#' /data/data/$PKG/shared_prefs/clean_launcher.xml"
-adb shell cat /data/data/$PKG/shared_prefs/clean_launcher.xml | grep -o 'lock_[a-z_]*" value="[^"]*"' > $OUT/prefs.txt || true
+adb shell cat /data/data/$PKG/shared_prefs/clean_launcher.xml | grep -o 'lock_[a-z_]*' > $OUT/prefs.txt || true
+# Der Launcher startet als Startbildschirm sofort neu (mit alten Einstellungen im Speicher) -> nochmal neu starten
+adb shell am force-stop $PKG
+sleep 2
 adb shell settings put secure enabled_accessibility_services none
 sleep 1
 adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
