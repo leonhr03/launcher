@@ -210,7 +210,7 @@ adb shell input keyevent KEYCODE_SLEEP
 sleep 2
 adb shell input keyevent KEYCODE_WAKEUP
 shot 28-sperre-mit-code 3
-adb shell input swipe 540 2250 540 900 250
+adb shell input swipe 540 2280 540 700 450
 shot 29-ios-code-eingabe 3
 sleep 5
 shot 29b-code-nach-warten 0
