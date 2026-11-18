@@ -855,7 +855,9 @@ private fun LockSection(prefs: Prefs) {
             Divider()
             SwitchRow("Nach rechts wischen: Heute-Ansicht", prefs.lockTodayView, "Widgets, Wecker und Musik") { prefs.lockTodayView = it }
             Divider()
-            ColorRow("Farbe der Uhr", prefs.lockClockColor) { prefs.lockClockColor = it }
+            ActionRow("Uhr anpassen", "Schrift, Stärke, Größe und Farbe – wie beim iPhone") {
+                openSafe(ctx, android.content.Intent(ctx, com.cleanlauncher.lock.LockCustomizeActivity::class.java))
+            }
             Divider()
             FloatSlider("Hintergrund abdunkeln", prefs.lockDim, 0f..0.7f, step = 0.01f, percent = true) { prefs.lockDim = it }
             Divider()

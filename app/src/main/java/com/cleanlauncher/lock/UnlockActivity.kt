@@ -60,6 +60,7 @@ class UnlockActivity : Activity() {
         const val ACTION_NOTIF = "notif"
         const val ACTION_SETTINGS = "settings"
         const val ACTION_APP = "app"
+        const val ACTION_CUSTOMIZE = "customize"
 
         fun start(context: Context, action: String = ACTION_NONE, key: String? = null) {
             try {
@@ -90,6 +91,10 @@ class UnlockActivity : Activity() {
                 }
                 ACTION_SETTINGS -> try {
                     context.startActivity(Intent(context, SettingsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                } catch (_: Exception) {
+                }
+                ACTION_CUSTOMIZE -> try {
+                    context.startActivity(Intent(context, LockCustomizeActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 } catch (_: Exception) {
                 }
                 ACTION_APP -> {

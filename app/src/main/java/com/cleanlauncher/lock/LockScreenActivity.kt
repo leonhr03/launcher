@@ -82,12 +82,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.cleanlauncher.SettingsActivity
 import com.cleanlauncher.data.AppRepository
 import com.cleanlauncher.data.BuiltinWidget
 import com.cleanlauncher.data.Prefs
@@ -97,6 +97,7 @@ import com.cleanlauncher.system.Notif
 import com.cleanlauncher.system.NotificationRepo
 import com.cleanlauncher.ui.BuiltinWidgetView
 import com.cleanlauncher.ui.IconImage
+import com.cleanlauncher.ui.InterFamily
 import com.cleanlauncher.ui.Ios
 import com.cleanlauncher.ui.LauncherTheme
 import com.cleanlauncher.ui.WidgetCard
@@ -163,7 +164,7 @@ class LockScreenActivity : ComponentActivity() {
                     onCamera = { openSecureCamera(this) },
                     onCustomize = {
                         unlock(cancelled = {}) {
-                            runCatching { startActivity(Intent(this, SettingsActivity::class.java)) }
+                            runCatching { startActivity(Intent(this, LockCustomizeActivity::class.java)) }
                         }
                     },
                 )
@@ -225,6 +226,35 @@ fun openSecureCamera(context: Context) {
         } catch (_: Exception) {
         }
     }
+}
+
+/** Schriften für die Uhr – wie die Stil-Auswahl beim iPhone. */
+val LOCK_CLOCK_FONTS = listOf("Standard", "System", "Schmal", "Serif", "Mono", "Schrift")
+
+fun lockClockFamily(font: Int): FontFamily = when (font) {
+    1 -> FontFamily.SansSerif
+    2 -> FontFamily(android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.NORMAL))
+    3 -> FontFamily.Serif
+    4 -> FontFamily.Monospace
+    5 -> FontFamily.Cursive
+    else -> InterFamily
+}
+
+/** Große Uhr des Sperrbildschirms – auch in der Anpassen-Vorschau benutzt. */
+@Composable
+fun LockClockText(prefs: Prefs, now: Long, color: Color = Color(prefs.lockClockColor)) {
+    val family = remember(prefs.lockClockFont) { lockClockFamily(prefs.lockClockFont) }
+    val size = prefs.lockClockSize
+    Text(
+        DateFormat.format(if (prefs.clock24h) "HH:mm" else "h:mm", Date(now)).toString(),
+        color = color,
+        fontSize = size.sp,
+        fontFamily = family,
+        fontWeight = FontWeight(prefs.lockClockWeight.coerceIn(100, 900)),
+        lineHeight = (size * 1.05f).sp,
+        maxLines = 1,
+        style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 3f), 18f)),
+    )
 }
 
 private class Battery(val level: Int, val charging: Boolean)
@@ -460,14 +490,7 @@ fun LockScreen(
                     fontWeight = FontWeight.SemiBold,
                     style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 2f), 12f)),
                 )
-                Text(
-                    DateFormat.format(if (prefs.clock24h) "HH:mm" else "h:mm", Date(now)).toString(),
-                    color = clockColor,
-                    fontSize = 96.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 100.sp,
-                    style = androidx.compose.ui.text.TextStyle(shadow = androidx.compose.ui.graphics.Shadow(Color.Black.copy(alpha = 0.3f), Offset(0f, 3f), 18f)),
-                )
+                LockClockText(prefs, now, clockColor)
                 if (prefs.lockWidgets) {
                     Spacer(Modifier.height(6.dp))
                     LockWidgetsRow(prefs, battery, alarm, now, clockColor)

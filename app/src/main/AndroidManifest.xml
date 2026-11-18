@@ -95,6 +95,15 @@
             android:theme="@style/Theme.Launcher"
             android:screenOrientation="portrait" />
 
+        <!-- Sperrbildschirm anpassen (lange auf die Uhr drücken) -->
+        <activity
+            android:name=".lock.LockCustomizeActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:taskAffinity="com.cleanlauncher.lockcustomize"
+            android:theme="@style/Theme.Launcher" />
+
         <!-- Unsichtbare Brücke: fragt nach dem Hochwischen direkt PIN/Fingerabdruck ab -->
         <activity
             android:name=".lock.UnlockActivity"

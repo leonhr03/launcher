@@ -26,7 +26,7 @@ class LockService : Service() {
 
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_SCREEN_OFF) showLock(context)
+            if (intent.action == Intent.ACTION_SCREEN_OFF && System.currentTimeMillis() - lastShown > 1500) showLock(context)
         }
     }
 
@@ -58,6 +58,28 @@ class LockService : Service() {
             startForeground(1, n)
         }
         registerReceiver(receiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        runCatching {
+            getSystemService(android.hardware.display.DisplayManager::class.java)
+                .registerDisplayListener(displayListener, android.os.Handler(android.os.Looper.getMainLooper()))
+        }
+    }
+
+    /** Reagiert sofort beim Ausschalten (SCREEN_OFF kommt oft verspätet). */
+    private var lastShown = 0L
+    private val displayListener = object : android.hardware.display.DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+        override fun onDisplayRemoved(displayId: Int) {}
+        override fun onDisplayChanged(displayId: Int) {
+            if (displayId != android.view.Display.DEFAULT_DISPLAY) return
+            val st = getSystemService(android.hardware.display.DisplayManager::class.java)?.getDisplay(displayId)?.state ?: return
+            if (st == android.view.Display.STATE_OFF || st == android.view.Display.STATE_DOZE) {
+                val t = System.currentTimeMillis()
+                if (t - lastShown > 1500) {
+                    lastShown = t
+                    showLock(this@LockService)
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -73,6 +95,7 @@ class LockService : Service() {
 
     override fun onDestroy() {
         runCatching { unregisterReceiver(receiver) }
+        runCatching { getSystemService(android.hardware.display.DisplayManager::class.java).unregisterDisplayListener(displayListener) }
         super.onDestroy()
     }
 

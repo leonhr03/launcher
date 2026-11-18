@@ -166,6 +166,10 @@ class Prefs private constructor(context: Context) {
     var lockCamera by bool("lock_camera", true)
     var lockClockColor by int("lock_clock_color", 0xFFFFFFFF.toInt())
     var lockDim by float("lock_dim", 0.1f)
+    /** Uhr-Stil wie iOS: 0 Standard, 1 System, 2 Schmal, 3 Serif, 4 Mono, 5 Schreibschrift */
+    var lockClockFont by int("lock_clock_font", 0)
+    var lockClockWeight by int("lock_clock_weight", 700)
+    var lockClockSize by int("lock_clock_size", 96)
     /** iOS-Widgets unter der Uhr (Akku, Wecker, Kalender) */
     var lockWidgets by bool("lock_widgets", true)
     /** Mitteilungen pro App stapeln wie bei iOS */

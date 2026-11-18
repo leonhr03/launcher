@@ -95,6 +95,7 @@ class OverlayManager(private val service: AccessibilityService) {
     private var lock: View? = null
     private var lockParams: WindowManager.LayoutParams? = null
     private var lockVisible = false
+    private var lockFresh = false
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lockUnlocked by mutableStateOf(false)
     private var lockReset by mutableIntStateOf(0)
@@ -124,7 +125,25 @@ class OverlayManager(private val service: AccessibilityService) {
         }
     }
 
+    /** Meldet das Ausschalten sofort – die SCREEN_OFF-Nachricht kommt oft erst verspätet. */
+    private val displayListener = object : android.hardware.display.DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+        override fun onDisplayRemoved(displayId: Int) {}
+        override fun onDisplayChanged(displayId: Int) {
+            if (displayId != android.view.Display.DEFAULT_DISPLAY || !prefs.lockEnabled) return
+            val st = service.getSystemService(android.hardware.display.DisplayManager::class.java)
+                ?.getDisplay(displayId)?.state ?: return
+            if (st == android.view.Display.STATE_OFF || st == android.view.Display.STATE_DOZE ||
+                st == android.view.Display.STATE_DOZE_SUSPEND
+            ) showLock()
+        }
+    }
+
     fun start() {
+        runCatching {
+            service.getSystemService(android.hardware.display.DisplayManager::class.java)
+                .registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
+        }
         WallpaperRepo.init(service)
         MediaRepo.init(service)
         service.registerReceiver(powerReceiver, IntentFilter(Intent.ACTION_POWER_CONNECTED))
@@ -154,6 +173,7 @@ class OverlayManager(private val service: AccessibilityService) {
     fun stop() {
         runCatching { service.unregisterReceiver(powerReceiver) }
         runCatching { service.unregisterReceiver(screenReceiver) }
+        runCatching { service.getSystemService(android.hardware.display.DisplayManager::class.java).unregisterDisplayListener(displayListener) }
         listOf(bar, leftEdge, rightEdge, topTrigger, island, shade, lock).forEach { remove(it) }
         lock = null
         lockParams = null
@@ -340,12 +360,11 @@ class OverlayManager(private val service: AccessibilityService) {
                             com.cleanlauncher.lock.openSecureCamera(service)
                             mainHandler.postDelayed({ hideLock() }, 250)
                         },
-                        onCustomize = { unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_SETTINGS) },
+                        onCustomize = { unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_CUSTOMIZE) },
                     )
                 }
             },
         )
-        root.visibility = View.GONE
         val p = params(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT, Gravity.TOP)
         p.flags = p.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
         p.alpha = 0f
@@ -354,6 +373,7 @@ class OverlayManager(private val service: AccessibilityService) {
             lock = root
             lockParams = p
             lockVisible = false
+            lockFresh = true
             // Dynamic Island soll über dem Sperrbildschirm liegen
             if (island != null) {
                 remove(island)
@@ -380,7 +400,8 @@ class OverlayManager(private val service: AccessibilityService) {
         val p = lockParams ?: return
         if (lockVisible == visible) return
         lockVisible = visible
-        root.visibility = if (visible) View.VISIBLE else View.GONE
+        // Inhalt bleibt fertig gezeichnet; nur die Fenster-Transparenz wird umgeschaltet.
+        // Das braucht kein neues Bild -> klappt auch, während das Display schon aus ist.
         p.flags = if (visible) {
             p.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
         } else {
@@ -388,13 +409,28 @@ class OverlayManager(private val service: AccessibilityService) {
         }
         p.alpha = if (visible) 1f else 0f
         runCatching { wm.updateViewLayout(root, p) }
+        if (!visible) {
+            // Im Verborgenen schon den nächsten Sperrbildschirm vorbereiten (zurückgesetzt, Schloss zu)
+            mainHandler.postDelayed({
+                if (!lockVisible) {
+                    lockUnlocked = false
+                    lockReset++
+                    lockFresh = true
+                }
+            }, 400)
+        }
     }
 
     fun showLock() {
+        if (lockShowing) {
+            lockUnlocked = !km.isKeyguardLocked
+            return
+        }
         mainHandler.removeCallbacksAndMessages(null)
-        lockUnlocked = !km.isKeyguardLocked
-        lockReset++
-        if (lockShowing) return
+        // Schon vorbereitet? Dann nichts ändern, damit kein neues Bild nötig ist
+        if (!lockFresh) lockReset++
+        lockFresh = false
+        if (km.isKeyguardLocked) lockUnlocked = false
         val am = service.getSystemService(android.media.AudioManager::class.java)
         if (am.mode == android.media.AudioManager.MODE_IN_CALL || am.mode == android.media.AudioManager.MODE_IN_COMMUNICATION ||
             am.mode == android.media.AudioManager.MODE_RINGTONE
