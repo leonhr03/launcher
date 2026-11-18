@@ -56,7 +56,6 @@ class OverlayLifecycleOwner : SavedStateRegistryOwner {
     override val savedStateRegistry: SavedStateRegistry get() = ssc.savedStateRegistry
 
     fun start() {
-        if (prefs.gestureHideButtons && prefs.gestureBar) SystemActions.setNavButtonsHidden(service, true)
         ssc.performAttach()
         ssc.performRestore(null)
         registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
