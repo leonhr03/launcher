@@ -1,0 +1,4 @@
+lock_enabled" value="true"
+lock_mode" value="1"
+lock_code_length" value="6"
+2
