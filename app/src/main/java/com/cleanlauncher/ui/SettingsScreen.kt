@@ -999,7 +999,8 @@ private fun ImportSection(prefs: Prefs, autoImport: Boolean) {
 private const val FSG_KEY = "force_fsg_nav_bar"
 private const val ADB_COMMANDS =
     "adb shell pm grant com.cleanlauncher android.permission.WRITE_SECURE_SETTINGS\n" +
-        "adb shell settings put global force_fsg_nav_bar 1"
+        "adb shell settings put global force_fsg_nav_bar 1\n" +
+        "adb shell cmd overlay enable com.android.internal.systemui.navbar.gestural"
 
 @Composable
 private fun GestureNavSection() {
@@ -1026,7 +1027,7 @@ private fun GestureNavSection() {
         } else {
             ActionRow(
                 if (forced) "✓ Wischgesten sind freigeschaltet" else "Einmalig per PC freischalten",
-                if (forced) "Wähle jetzt in den Systemeinstellungen „Vollbild-Gesten“" else "Tippen kopiert die zwei Befehle",
+                if (forced) "Wähle jetzt in den Systemeinstellungen „Vollbild-Gesten“" else "Tippen kopiert die Befehle",
                 highlight = !forced,
             ) {
                 val cm = ctx.getSystemService(android.content.ClipboardManager::class.java)
@@ -1047,7 +1048,7 @@ private fun GestureNavSection() {
     if (!canWrite && !forced) {
         Footer(
             "Xiaomi schaltet die Wischgesten ab, sobald ein anderer Launcher aktiv ist. Mit einem kleinen Trick geht es trotzdem: " +
-                "Entwickleroptionen → USB-Debugging an, Handy per Kabel an den PC, und dort die zwei kopierten Befehle ausführen " +
+                "Entwickleroptionen → USB-Debugging an, Handy per Kabel an den PC, und dort die kopierten Befehle ausführen " +
                 "(Programm „adb“ / Android Platform-Tools). Das musst du nur einmal machen. Danach unter Systemnavigation „Gesten“ wählen.",
         )
     }
@@ -1089,6 +1090,8 @@ private fun SystemWideSection(prefs: Prefs) {
             SwitchRow("Vom Rand wischen = Zurück", prefs.gestureBack, "Links oder rechts vom Bildschirmrand nach innen wischen") { prefs.gestureBack = it }
             Divider()
             SwitchRow("Seitlich über die Leiste = letzte App", prefs.gestureSwitchApps) { prefs.gestureSwitchApps = it }
+            Divider()
+            SwitchRow("Leiste immer anzeigen", prefs.gestureBarAlways, "Falls die Xiaomi-Gesten eingeschaltet sind, aber nicht reagieren") { prefs.gestureBarAlways = it }
             Divider()
             ChoiceRow(
                 "Aussehen der Leiste",

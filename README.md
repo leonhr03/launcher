@@ -53,6 +53,14 @@ MIUI/HyperOS schaltet die Vollbild-Gesten ab, sobald ein anderer Launcher aktiv 
 ```
 adb shell pm grant com.cleanlauncher android.permission.WRITE_SECURE_SETTINGS
 adb shell settings put global force_fsg_nav_bar 1
+adb shell cmd overlay enable com.android.internal.systemui.navbar.gestural
+```
+
+Zurück zu den 3 Tasten:
+
+```
+adb shell settings put global force_fsg_nav_bar 0
+adb shell cmd overlay enable com.android.internal.systemui.navbar.threebutton
 ```
 
 (USB-Debugging in den Entwickleroptionen einschalten, Android Platform-Tools auf dem PC.) Danach in den Launcher-Einstellungen unter „Wischgesten“ den Schalter nutzen bzw. in den Systemeinstellungen „Gesten“ wählen.

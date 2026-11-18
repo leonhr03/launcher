@@ -141,6 +141,11 @@ class OverlayManager(private val service: AccessibilityService) {
 
     fun start() {
         runCatching {
+            val cr = service.contentResolver
+            cr.registerContentObserver(android.provider.Settings.Global.getUriFor("force_fsg_nav_bar"), false, navObserver)
+            cr.registerContentObserver(android.provider.Settings.Secure.getUriFor("navigation_mode"), false, navObserver)
+        }
+        runCatching {
             service.getSystemService(android.hardware.display.DisplayManager::class.java)
                 .registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
         }
@@ -158,7 +163,7 @@ class OverlayManager(private val service: AccessibilityService) {
         scope.launch {
             snapshotFlow {
                 listOf(
-                    prefs.gestureBar, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
+                    prefs.gestureBar, prefs.gestureBarAlways, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
                     prefs.dynamicIsland, prefs.islandOffsetY, prefs.islandWidth,
                 )
             }.collect {
@@ -173,6 +178,7 @@ class OverlayManager(private val service: AccessibilityService) {
     fun stop() {
         runCatching { service.unregisterReceiver(powerReceiver) }
         runCatching { service.unregisterReceiver(screenReceiver) }
+        runCatching { service.contentResolver.unregisterContentObserver(navObserver) }
         runCatching { service.getSystemService(android.hardware.display.DisplayManager::class.java).unregisterDisplayListener(displayListener) }
         listOf(bar, leftEdge, rightEdge, topTrigger, island, shade, lock).forEach { remove(it) }
         lock = null
@@ -219,10 +225,28 @@ class OverlayManager(private val service: AccessibilityService) {
     }
 
     /** Nutzt das Handy schon System-Wischgesten? Dann braucht es unsere Leiste nicht. */
-    private fun systemGestures(): Boolean = runCatching {
-        android.provider.Settings.Secure.getInt(service.contentResolver, "navigation_mode", 0) == 2 ||
-            android.provider.Settings.Global.getInt(service.contentResolver, "force_fsg_nav_bar", 0) == 1
-    }.getOrDefault(false)
+    private fun systemGestures(): Boolean {
+        if (prefs.gestureBarAlways) return false
+        // Echte Navigationsleiste messen: 3 Tasten sind ~48 dp hoch, der Gesten-Strich höchstens ~24 dp.
+        // (force_fsg_nav_bar allein reicht nicht – bei Xiaomi steht es oft auf 1, obwohl die Gesten nicht gehen.)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val nav = runCatching {
+                val i = wm.currentWindowMetrics.windowInsets.getInsets(android.view.WindowInsets.Type.navigationBars())
+                maxOf(i.bottom, i.left, i.right)
+            }.getOrNull()
+            if (nav != null) return nav < 32 * density
+        }
+        return runCatching {
+            android.provider.Settings.Secure.getInt(service.contentResolver, "navigation_mode", 0) == 2
+        }.getOrDefault(false)
+    }
+
+    /** Navigationsart geändert (z. B. per ADB-Befehl) -> Gestenleiste neu prüfen. */
+    private val navObserver = object : android.database.ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            mainHandler.postDelayed({ sync(rebuild = true) }, 700)
+        }
+    }
 
     private fun sync(rebuild: Boolean) {
         val land = landscape()
