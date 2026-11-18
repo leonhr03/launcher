@@ -212,7 +212,11 @@ adb shell input keyevent KEYCODE_WAKEUP
 shot 28-sperre-mit-code 3
 adb shell input swipe 540 2250 540 900 250
 shot 29-ios-code-eingabe 3
-for d in 1 2 3 4 5 6; do tap_text "$d"; done
+sleep 5
+shot 29b-code-nach-warten 0
+for xy in "267 1300" "540 1300" "813 1300" "267 1553" "540 1553"; do adb shell input tap $xy; sleep 0.4; done
+shot 29c-fuenf-ziffern 0
+adb shell input tap 813 1553
 shot 30-nach-code 3
 
 adb logcat -d -b crash > $OUT/crash.txt || true
