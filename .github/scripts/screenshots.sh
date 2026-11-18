@@ -191,6 +191,23 @@ adb shell input swipe 540 2390 540 1900 200
 shot 27-nach-home-geste 3
 adb shell dumpsys package $PKG | grep -E "versionCode|versionName" > $OUT/version.txt || true
 
+# ---------- Eigener iOS-Code (Test-Code 123456) ----------
+SALT=00112233445566778899aabbccddeeff
+HASH=$(python3 -c "import hashlib;print(hashlib.sha256(b'$SALT:123456').hexdigest())")
+adb shell am force-stop $PKG
+sleep 1
+adb shell "sed -i 's#</map>#<boolean name=\"lock_enabled\" value=\"true\" /><int name=\"lock_mode\" value=\"1\" /><int name=\"lock_code_length\" value=\"6\" /><string name=\"lock_code_salt\">$SALT</string><string name=\"lock_code_hash\">$HASH</string></map>#' /data/data/$PKG/shared_prefs/clean_launcher.xml"
+adb shell settings put secure enabled_accessibility_services $PKG/$PKG.system.LauncherAccessibilityService
+sleep 5
+adb shell input keyevent KEYCODE_SLEEP
+sleep 2
+adb shell input keyevent KEYCODE_WAKEUP
+shot 28-sperre-mit-code 3
+adb shell input swipe 540 2250 540 900 250
+shot 29-ios-code-eingabe 3
+for d in 1 2 3 4 5 6; do tap_text "$d"; done
+shot 30-nach-code 3
+
 adb logcat -d -b crash > $OUT/crash.txt || true
 adb logcat -d | grep -iE "cleanlauncher|AndroidRuntime|WindowManager.*(BadToken|permission)" | tail -200 > $OUT/log.txt || true
 ls -la $OUT

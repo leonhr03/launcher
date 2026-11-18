@@ -789,6 +789,7 @@ private fun LockSection(prefs: Prefs) {
             com.cleanlauncher.lock.LockService.sync(ctx)
         }
         if (prefs.lockEnabled) {
+            LockUnlockRows(prefs)
             Divider()
             ActionRow(
                 if (overlay) "✓ Über anderen Apps anzeigen" else "① Über anderen Apps anzeigen erlauben",
@@ -1229,6 +1230,114 @@ private fun OwnBackupSection() {
                 AlertButton("Abbrechen") { restoreUri = null },
             ),
             onDismiss = { restoreUri = null },
+        )
+    }
+}
+
+
+// ======================= Entsperren: Xiaomi-Sperre oder eigener iOS-Code =======================
+
+@Composable
+private fun LockUnlockRows(prefs: Prefs) {
+    val ctx = LocalContext.current
+    val tick = resumeTick()
+    val km = remember { ctx.getSystemService(android.app.KeyguardManager::class.java) }
+    val systemSecure = remember(tick) { km.isDeviceSecure }
+    var setCode by remember { mutableStateOf(false) }
+
+    Divider()
+    ChoiceRow(
+        "Entsperren",
+        listOf(0, 1),
+        prefs.lockMode,
+        { if (it == 1) "Eigener iOS-Code" else "Xiaomi-Sperre (Fingerabdruck)" },
+    ) {
+        prefs.lockMode = it
+        if (it == 1 && !com.cleanlauncher.lock.Passcode.isSet(prefs)) setCode = true
+    }
+    if (prefs.lockMode == 0) {
+        Divider()
+        SwitchRow(
+            "Fingerabdruck öffnet direkt",
+            prefs.lockAutoOpen,
+            "Wie ein normaler Sperrbildschirm: Finger auflegen → sofort Startbildschirm",
+        ) { prefs.lockAutoOpen = it }
+    } else {
+        Divider()
+        ActionRow(
+            if (com.cleanlauncher.lock.Passcode.isSet(prefs)) "Code ändern" else "Code festlegen",
+            "4 oder 6 Ziffern – iOS-Tastenfeld beim Hochwischen",
+            highlight = !com.cleanlauncher.lock.Passcode.isSet(prefs),
+        ) { setCode = true }
+        if (systemSecure) {
+            Divider()
+            ActionRow(
+                "Xiaomi-Sperre noch an",
+                "Sonst musst du zweimal entsperren: Sperrbildschirm-Passwort bei Xiaomi ausschalten",
+                destructive = true,
+            ) { openSafe(ctx, android.content.Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS)) }
+        }
+    }
+    if (setCode) SetCodeDialog(prefs) { setCode = false }
+}
+
+@Composable
+private fun SetCodeDialog(prefs: Prefs, onDone: () -> Unit) {
+    val dark = isSystemInDarkTheme()
+    var first by remember { mutableStateOf<String?>(null) }
+    var value by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    IosAlert(
+        title = if (first == null) "Neuen Code eingeben" else "Code bestätigen",
+        message = error ?: "4 oder 6 Ziffern",
+        buttons = listOf(
+            AlertButton("Abbrechen") {
+                if (!com.cleanlauncher.lock.Passcode.isSet(prefs)) prefs.lockMode = 0
+                onDone()
+            },
+            AlertButton("Weiter", bold = true) {
+                val v = value.trim()
+                when {
+                    v.length != 4 && v.length != 6 || !v.all { it.isDigit() } -> error = "Bitte genau 4 oder 6 Ziffern"
+                    first == null -> {
+                        first = v
+                        value = ""
+                        error = null
+                    }
+                    first != v -> {
+                        first = null
+                        value = ""
+                        error = "Codes stimmen nicht überein – noch mal"
+                    }
+                    else -> {
+                        com.cleanlauncher.lock.Passcode.set(prefs, v)
+                        onDone()
+                    }
+                }
+            },
+        ),
+        onDismiss = { },
+    ) {
+        androidx.compose.foundation.text.BasicTextField(
+            value = value,
+            onValueChange = { v -> value = v.filter { it.isDigit() }.take(6) },
+            singleLine = true,
+            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword,
+            ),
+            textStyle = androidx.compose.ui.text.TextStyle(
+                color = if (dark) Color.White else Color.Black,
+                fontSize = 22.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                letterSpacing = 8.sp,
+            ),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Ios.blue),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (dark) Color(0xFF1C1C1E) else Color.White)
+                .padding(10.dp),
         )
     }
 }

@@ -83,6 +83,10 @@ class Prefs private constructor(context: Context) {
     private fun float(key: String, def: Float) =
         P(key, def, false, { s, k, d -> s.getFloat(k, d) }, { k, v -> putFloat(k, v) })
 
+    /** Text-Einstellung; layout = true -> wird beim Design-Reset nicht gelöscht (z. B. Code). */
+    private fun string(key: String, def: String, layout: Boolean = true) =
+        P(key, def, layout, { s, k, d -> s.getString(k, d) ?: d }, { k, v -> putString(k, v) })
+
     private fun bool(key: String, def: Boolean, layout: Boolean = false) =
         P(key, def, layout, { s, k, d -> s.getBoolean(k, d) }, { k, v -> putBoolean(k, v) })
 
@@ -162,6 +166,13 @@ class Prefs private constructor(context: Context) {
 
     // ---------- Sperrbildschirm ----------
     var lockEnabled by bool("lock_enabled", false)
+    /** 0 = über die Xiaomi-Sperre (Fingerabdruck/PIN vom System), 1 = eigener iOS-Code */
+    var lockMode by int("lock_mode", 0)
+    /** Fingerabdruck entsperrt -> iOS-Sperrbildschirm verschwindet sofort */
+    var lockAutoOpen by bool("lock_auto_open", true)
+    var lockCodeHash by string("lock_code_hash", "")
+    var lockCodeSalt by string("lock_code_salt", "")
+    var lockCodeLength by int("lock_code_length", 6)
     var lockNotifications by bool("lock_notifications", true)
     var lockHideContent by bool("lock_hide_content", true)
     var lockTorch by bool("lock_torch", true)

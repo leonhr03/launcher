@@ -98,6 +98,15 @@ class OverlayManager(private val service: AccessibilityService) {
     private var lockFresh = false
     private val mainHandler = Handler(Looper.getMainLooper())
     private var lockUnlocked by mutableStateOf(false)
+    private var passcodeVisible by mutableStateOf(false)
+    private var passcodeReset by mutableIntStateOf(0)
+    private var pendingAction: Pair<String, String?>? = null
+
+    /** Eigener iOS-Code statt Xiaomi-Sperre aktiv? */
+    private fun ownCodeActive() = prefs.lockMode == 1 && com.cleanlauncher.lock.Passcode.isSet(prefs)
+
+    /** Gilt das Handy als entsperrt? (Mit eigenem Code: erst nach richtiger Eingabe.) */
+    private fun systemUnlocked() = if (ownCodeActive()) false else !km.isKeyguardLocked
     private var lockReset by mutableIntStateOf(0)
     private val km = service.getSystemService(android.app.KeyguardManager::class.java)
     private var shadeCloseTick by mutableIntStateOf(0)
@@ -116,11 +125,15 @@ class OverlayManager(private val service: AccessibilityService) {
             when (i.action) {
                 Intent.ACTION_SCREEN_OFF -> if (prefs.lockEnabled) showLock()
                 Intent.ACTION_SCREEN_ON -> {
-                    lockUnlocked = !km.isKeyguardLocked
+                    lockUnlocked = systemUnlocked()
                     // Falls das Ausschalten verpasst wurde: trotzdem sofort zeigen
-                    if (prefs.lockEnabled && km.isKeyguardLocked && !lockShowing) showLock()
+                    if (prefs.lockEnabled && (km.isKeyguardLocked || ownCodeActive()) && !lockShowing) showLock()
                 }
-                Intent.ACTION_USER_PRESENT -> lockUnlocked = true
+                Intent.ACTION_USER_PRESENT -> {
+                    if (!ownCodeActive()) lockUnlocked = true
+                    // Mit Fingerabdruck entsperrt -> direkt zum Startbildschirm, wie ein normaler Sperrbildschirm
+                    if (lockShowing && prefs.lockMode == 0 && prefs.lockAutoOpen && km.isDeviceSecure) hideLock()
+                }
             }
         }
     }
@@ -173,7 +186,7 @@ class OverlayManager(private val service: AccessibilityService) {
             }
         }
         // Direkt starten: Ist das Handy gerade gesperrt (z. B. nach dem Neustart), sofort anzeigen
-        if (prefs.lockEnabled && km.isKeyguardLocked) showLock()
+        if (prefs.lockEnabled && (km.isKeyguardLocked || ownCodeActive())) showLock()
     }
 
     fun stop() {
@@ -378,6 +391,7 @@ class OverlayManager(private val service: AccessibilityService) {
         root.addView(
             composeView {
                 com.cleanlauncher.ui.LauncherTheme(prefs, dark = true) {
+                    androidx.compose.foundation.layout.Box {
                     com.cleanlauncher.lock.LockScreen(
                         prefs = prefs,
                         unlocked = lockUnlocked,
@@ -386,10 +400,25 @@ class OverlayManager(private val service: AccessibilityService) {
                         onOpenNotification = { n -> unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_NOTIF, n.key) },
                         onCamera = {
                             com.cleanlauncher.lock.openSecureCamera(service)
+                            if (ownCodeActive()) codeSuspended = true
                             mainHandler.postDelayed({ hideLock() }, 250)
                         },
                         onCustomize = { unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_CUSTOMIZE) },
                     )
+                    if (passcodeVisible) {
+                        com.cleanlauncher.lock.PasscodeScreen(
+                            prefs = prefs,
+                            resetTick = passcodeReset,
+                            onCode = { com.cleanlauncher.lock.Passcode.check(prefs, it) },
+                            onSuccess = { finishOwnUnlock() },
+                            onCancel = {
+                                passcodeVisible = false
+                                pendingAction = null
+                                lockReset++
+                            },
+                        )
+                    }
+                    }
                 }
             },
         )
@@ -441,6 +470,7 @@ class OverlayManager(private val service: AccessibilityService) {
             // Im Verborgenen schon den nächsten Sperrbildschirm vorbereiten (zurückgesetzt, Schloss zu)
             mainHandler.postDelayed({
                 if (!lockVisible) {
+                    passcodeVisible = false
                     lockUnlocked = false
                     lockReset++
                     lockFresh = true
@@ -451,14 +481,14 @@ class OverlayManager(private val service: AccessibilityService) {
 
     fun showLock() {
         if (lockShowing) {
-            lockUnlocked = !km.isKeyguardLocked
+            lockUnlocked = systemUnlocked()
             return
         }
         mainHandler.removeCallbacksAndMessages(null)
         // Schon vorbereitet? Dann nichts ändern, damit kein neues Bild nötig ist
         if (!lockFresh) lockReset++
         lockFresh = false
-        if (km.isKeyguardLocked) lockUnlocked = false
+        if (km.isKeyguardLocked || ownCodeActive()) lockUnlocked = false
         val am = service.getSystemService(android.media.AudioManager::class.java)
         if (am.mode == android.media.AudioManager.MODE_IN_CALL || am.mode == android.media.AudioManager.MODE_IN_COMMUNICATION ||
             am.mode == android.media.AudioManager.MODE_RINGTONE
@@ -470,11 +500,36 @@ class OverlayManager(private val service: AccessibilityService) {
 
     fun hideLock() = setLockVisible(false)
 
+    /** Richtiger iOS-Code eingegeben. */
+    private fun finishOwnUnlock() {
+        codeSuspended = false
+        val (action, key) = pendingAction ?: (com.cleanlauncher.lock.UnlockActivity.ACTION_NONE to null)
+        pendingAction = null
+        lockUnlocked = true
+        if (km.isKeyguardLocked) {
+            // Xiaomi-Sperre ist zusätzlich noch an -> System fragt danach
+            com.cleanlauncher.lock.UnlockActivity.start(service, action, key)
+            mainHandler.postDelayed({ hideLock() }, 180)
+        } else {
+            hideLock()
+            if (action != com.cleanlauncher.lock.UnlockActivity.ACTION_NONE) {
+                com.cleanlauncher.lock.UnlockActivity.runAction(service, com.cleanlauncher.lock.UnlockActivity.actionIntent(action, key))
+            }
+        }
+    }
+
     /**
      * Hochgewischt: Ist das Handy noch gesperrt, fragt das System direkt nach PIN/Fingerabdruck
      * (ohne Umweg über den System-Sperrbildschirm). Danach optional eine Aktion ausführen.
      */
     private fun unlockFromLock(action: String = com.cleanlauncher.lock.UnlockActivity.ACTION_NONE, key: String? = null) {
+        if (ownCodeActive()) {
+            // Eigener iOS-Code: Tastenfeld im Sperrbildschirm zeigen
+            pendingAction = action to key
+            passcodeReset++
+            passcodeVisible = true
+            return
+        }
         val needsBridge = km.isKeyguardLocked || action != com.cleanlauncher.lock.UnlockActivity.ACTION_NONE
         if (needsBridge) {
             com.cleanlauncher.lock.UnlockActivity.start(service, action, key)
@@ -486,8 +541,30 @@ class OverlayManager(private val service: AccessibilityService) {
     }
 
     /** Ein anderes Fenster kommt nach vorne (Wecker, Anruf, Kamera …) -> Sperrbildschirm weg. */
+    private var codeSuspended = false
+
+    private fun isAllowedOverLock(pkg: String): Boolean {
+        val p = pkg.lowercase()
+        return listOf("camera", "dialer", "incallui", "telecom", "phone", "clock", "alarm", "voip").any { p.contains(it) }
+    }
+
     fun onWindowChanged(pkg: String?) {
         if (lock == null || pkg == null) return
+        val system = pkg == "com.android.systemui" || pkg == "android" || pkg.contains("keyguard") ||
+            pkg.contains("inputmethod") || pkg == "com.miui.aod"
+        if (ownCodeActive()) {
+            // Eigener Code: nur Kamera, Anrufe und Wecker dürfen nach vorne – danach wieder sperren
+            if (lockShowing) {
+                if (!system && isAllowedOverLock(pkg)) {
+                    codeSuspended = true
+                    hideLock()
+                }
+            } else if (codeSuspended && !system && !isAllowedOverLock(pkg)) {
+                codeSuspended = false
+                showLock()
+            }
+            return
+        }
         val ignore = setOf(service.packageName, "com.android.systemui", "android", "com.miui.home", "com.miui.aod", "com.android.keyguard")
         if (pkg in ignore || pkg.contains("keyguard") || pkg.contains("inputmethod")) return
         hideLock()
