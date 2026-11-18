@@ -1,4 +1,6 @@
-lock_enabled" value="true"
-lock_mode" value="1"
-lock_code_length" value="6"
+lock_enabled
+lock_mode
+lock_code_length
+lock_code_salt
+lock_code_hash
 2
