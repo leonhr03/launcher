@@ -845,6 +845,16 @@ private fun LockSection(prefs: Prefs) {
             Divider()
             SwitchRow("Kamera-Taste", prefs.lockCamera) { prefs.lockCamera = it }
             Divider()
+            SwitchRow("Tasten gedrückt halten", prefs.lockHoldButtons, "Wie beim iPhone: Taschenlampe/Kamera erst nach kurzem Halten (mit Vibration)") { prefs.lockHoldButtons = it }
+            Divider()
+            SwitchRow("Widgets unter der Uhr", prefs.lockWidgets, "Akku, nächster Wecker und Kalender") { prefs.lockWidgets = it }
+            Divider()
+            SwitchRow("Mitteilungen stapeln", prefs.lockStackNotifs, "Mehrere Mitteilungen einer App als Stapel – Tippen klappt auf") { prefs.lockStackNotifs = it }
+            Divider()
+            SwitchRow("Nach links wischen: Kamera", prefs.lockSwipeCamera) { prefs.lockSwipeCamera = it }
+            Divider()
+            SwitchRow("Nach rechts wischen: Heute-Ansicht", prefs.lockTodayView, "Widgets, Wecker und Musik") { prefs.lockTodayView = it }
+            Divider()
             ColorRow("Farbe der Uhr", prefs.lockClockColor) { prefs.lockClockColor = it }
             Divider()
             FloatSlider("Hintergrund abdunkeln", prefs.lockDim, 0f..0.7f, step = 0.01f, percent = true) { prefs.lockDim = it }
@@ -857,7 +867,7 @@ private fun LockSection(prefs: Prefs) {
         }
     }
     if (prefs.lockEnabled) {
-        Footer("Tipp: Mit eingeschalteter Bedienungshilfe („iOS überall“) erscheint der Sperrbildschirm sofort ohne Verzögerung. Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone.")
+        Footer("Tipp: Mit eingeschalteter Bedienungshilfe („iOS überall“) erscheint der Sperrbildschirm sofort ohne Verzögerung. Deine echte Sperre (PIN, Muster, Fingerabdruck) bleibt aktiv: Nach dem Hochwischen fragt das System wie gewohnt danach. Mit Fingerabdruck entsperrst du direkt und wischst dann nur noch hoch – wie Face ID beim iPhone. Lange auf die Uhr drücken öffnet diese Einstellungen.")
     }
 }
 

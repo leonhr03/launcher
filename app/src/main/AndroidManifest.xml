@@ -95,6 +95,17 @@
             android:theme="@style/Theme.Launcher"
             android:screenOrientation="portrait" />
 
+        <!-- Unsichtbare Brücke: fragt nach dem Hochwischen direkt PIN/Fingerabdruck ab -->
+        <activity
+            android:name=".lock.UnlockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:noHistory="true"
+            android:showWhenLocked="true"
+            android:taskAffinity="com.cleanlauncher.unlock"
+            android:theme="@style/Theme.Unlock" />
+
         <service
             android:name=".lock.LockService"
             android:exported="false"

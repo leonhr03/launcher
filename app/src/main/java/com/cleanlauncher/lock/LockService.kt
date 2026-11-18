@@ -65,6 +65,9 @@ class LockService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        // Direkt starten: Ist das Handy schon gesperrt (z. B. nach dem Neustart), gleich anzeigen
+        val km = getSystemService(android.app.KeyguardManager::class.java)
+        if (km.isKeyguardLocked) showLock(this)
         return START_STICKY
     }
 

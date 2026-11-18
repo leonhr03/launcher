@@ -166,6 +166,16 @@ class Prefs private constructor(context: Context) {
     var lockCamera by bool("lock_camera", true)
     var lockClockColor by int("lock_clock_color", 0xFFFFFFFF.toInt())
     var lockDim by float("lock_dim", 0.1f)
+    /** iOS-Widgets unter der Uhr (Akku, Wecker, Kalender) */
+    var lockWidgets by bool("lock_widgets", true)
+    /** Mitteilungen pro App stapeln wie bei iOS */
+    var lockStackNotifs by bool("lock_stack_notifs", true)
+    /** Taschenlampe/Kamera nur durch Gedrückthalten (wie beim iPhone) */
+    var lockHoldButtons by bool("lock_hold_buttons", true)
+    /** Nach links wischen = Kamera */
+    var lockSwipeCamera by bool("lock_swipe_camera", true)
+    /** Nach rechts wischen = Heute-Ansicht mit Widgets */
+    var lockTodayView by bool("lock_today_view", true)
 
     // ---------- Systemweit (Bedienungshilfe) ----------
     var gestureBar by bool("gesture_bar", false)

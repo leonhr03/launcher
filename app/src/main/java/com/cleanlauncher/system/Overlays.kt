@@ -93,6 +93,9 @@ class OverlayManager(private val service: AccessibilityService) {
     private var island: View? = null
     private var shade: View? = null
     private var lock: View? = null
+    private var lockParams: WindowManager.LayoutParams? = null
+    private var lockVisible = false
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var lockUnlocked by mutableStateOf(false)
     private var lockReset by mutableIntStateOf(0)
     private val km = service.getSystemService(android.app.KeyguardManager::class.java)
@@ -111,7 +114,11 @@ class OverlayManager(private val service: AccessibilityService) {
         override fun onReceive(c: Context, i: Intent) {
             when (i.action) {
                 Intent.ACTION_SCREEN_OFF -> if (prefs.lockEnabled) showLock()
-                Intent.ACTION_SCREEN_ON -> lockUnlocked = !km.isKeyguardLocked
+                Intent.ACTION_SCREEN_ON -> {
+                    lockUnlocked = !km.isKeyguardLocked
+                    // Falls das Ausschalten verpasst wurde: trotzdem sofort zeigen
+                    if (prefs.lockEnabled && km.isKeyguardLocked && !lockShowing) showLock()
+                }
                 Intent.ACTION_USER_PRESENT -> lockUnlocked = true
             }
         }
@@ -135,8 +142,13 @@ class OverlayManager(private val service: AccessibilityService) {
                     prefs.gestureBar, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
                     prefs.dynamicIsland, prefs.islandOffsetY, prefs.islandWidth,
                 )
-            }.collect { sync(rebuild = true) }
+            }.collect {
+                sync(rebuild = true)
+                if (prefs.lockEnabled) preloadLock() else destroyLock()
+            }
         }
+        // Direkt starten: Ist das Handy gerade gesperrt (z. B. nach dem Neustart), sofort anzeigen
+        if (prefs.lockEnabled && km.isKeyguardLocked) showLock()
     }
 
     fun stop() {
@@ -144,6 +156,8 @@ class OverlayManager(private val service: AccessibilityService) {
         runCatching { service.unregisterReceiver(screenReceiver) }
         listOf(bar, leftEdge, rightEdge, topTrigger, island, shade, lock).forEach { remove(it) }
         lock = null
+        lockParams = null
+        mainHandler.removeCallbacksAndMessages(null)
         bar = null; leftEdge = null; rightEdge = null; topTrigger = null; island = null; shade = null
         owner.destroy()
         scope.cancel()
@@ -213,7 +227,8 @@ class OverlayManager(private val service: AccessibilityService) {
         val h = dimen("navigation_bar_height", 48).coerceAtLeast((24 * density).toInt())
         val v = GestureBarView(
             service, prefs.gestureBarStyle,
-            onHome = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME) },
+            // Auf dem Sperrbildschirm entsperrt der Strich – wie beim iPhone
+            onHome = { if (lockShowing) unlockFromLock() else service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME) },
             onRecents = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_RECENTS) },
             onSwitch = {
                 if (prefs.gestureSwitchApps) {
@@ -231,7 +246,7 @@ class OverlayManager(private val service: AccessibilityService) {
     private fun addEdges() {
         val w = (18 * density).toInt()
         val h = (service.resources.displayMetrics.heightPixels * 0.55f).toInt()
-        val back = { service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK); Unit }
+        val back = { if (!lockShowing) service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK); Unit }
         val l = BackEdgeView(service, left = true, onBack = back)
         val r = BackEdgeView(service, left = false, onBack = back)
         wm.addView(l, params(w, h, Gravity.START or Gravity.CENTER_VERTICAL))
@@ -293,20 +308,22 @@ class OverlayManager(private val service: AccessibilityService) {
     }
 
     // ---------------- iOS-Sperrbildschirm (sofort, ohne Verzögerung) ----------------
+    //
+    // Wie bei Sperrbildschirm-Apps (Nova & Co.): Das Fenster wird einmal aufgebaut und bleibt
+    // unsichtbar im Speicher. Beim Ausschalten wird es nur noch eingeblendet -> beim Einschalten
+    // ist es ohne Ladezeit sofort da.
 
-    val lockShowing: Boolean get() = lock != null
+    val lockShowing: Boolean get() = lock != null && lockVisible
 
-    fun showLock() {
-        lockUnlocked = !km.isKeyguardLocked
-        if (lock != null) {
-            lockReset++
-            return
+    private fun preloadLock() {
+        try {
+            ensureLockWindow()
+        } catch (_: Exception) {
         }
-        val am = service.getSystemService(android.media.AudioManager::class.java)
-        if (am.mode == android.media.AudioManager.MODE_IN_CALL || am.mode == android.media.AudioManager.MODE_IN_COMMUNICATION ||
-            am.mode == android.media.AudioManager.MODE_RINGTONE
-        ) return
-        hideShade()
+    }
+
+    private fun ensureLockWindow(): Boolean {
+        if (lock != null) return true
         val root = FrameLayout(service)
         root.setViewTreeLifecycleOwner(owner)
         root.setViewTreeSavedStateRegistryOwner(owner)
@@ -317,32 +334,91 @@ class OverlayManager(private val service: AccessibilityService) {
                         prefs = prefs,
                         unlocked = lockUnlocked,
                         resetTick = lockReset,
-                        onUnlock = { hideLock() },
-                        onOpenNotification = { n ->
-                            hideLock()
-                            NotificationRepo.open(n)
+                        onUnlock = { unlockFromLock() },
+                        onOpenNotification = { n -> unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_NOTIF, n.key) },
+                        onCamera = {
+                            com.cleanlauncher.lock.openSecureCamera(service)
+                            mainHandler.postDelayed({ hideLock() }, 250)
                         },
+                        onCustomize = { unlockFromLock(com.cleanlauncher.lock.UnlockActivity.ACTION_SETTINGS) },
                     )
                 }
             },
         )
-        try {
-            wm.addView(root, params(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT, Gravity.TOP))
+        root.visibility = View.GONE
+        val p = params(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT, Gravity.TOP)
+        p.flags = p.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        p.alpha = 0f
+        return try {
+            wm.addView(root, p)
             lock = root
+            lockParams = p
+            lockVisible = false
             // Dynamic Island soll über dem Sperrbildschirm liegen
             if (island != null) {
                 remove(island)
                 island = null
                 if (prefs.dynamicIsland && !landscape()) addIsland()
             }
+            true
         } catch (e: Exception) {
             lock = null
+            lockParams = null
+            false
         }
     }
 
-    fun hideLock() {
+    private fun destroyLock() {
         remove(lock)
         lock = null
+        lockParams = null
+        lockVisible = false
+    }
+
+    private fun setLockVisible(visible: Boolean) {
+        val root = lock ?: return
+        val p = lockParams ?: return
+        if (lockVisible == visible) return
+        lockVisible = visible
+        root.visibility = if (visible) View.VISIBLE else View.GONE
+        p.flags = if (visible) {
+            p.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+        } else {
+            p.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        }
+        p.alpha = if (visible) 1f else 0f
+        runCatching { wm.updateViewLayout(root, p) }
+    }
+
+    fun showLock() {
+        mainHandler.removeCallbacksAndMessages(null)
+        lockUnlocked = !km.isKeyguardLocked
+        lockReset++
+        if (lockShowing) return
+        val am = service.getSystemService(android.media.AudioManager::class.java)
+        if (am.mode == android.media.AudioManager.MODE_IN_CALL || am.mode == android.media.AudioManager.MODE_IN_COMMUNICATION ||
+            am.mode == android.media.AudioManager.MODE_RINGTONE
+        ) return
+        hideShade()
+        if (!ensureLockWindow()) return
+        setLockVisible(true)
+    }
+
+    fun hideLock() = setLockVisible(false)
+
+    /**
+     * Hochgewischt: Ist das Handy noch gesperrt, fragt das System direkt nach PIN/Fingerabdruck
+     * (ohne Umweg über den System-Sperrbildschirm). Danach optional eine Aktion ausführen.
+     */
+    private fun unlockFromLock(action: String = com.cleanlauncher.lock.UnlockActivity.ACTION_NONE, key: String? = null) {
+        val needsBridge = km.isKeyguardLocked || action != com.cleanlauncher.lock.UnlockActivity.ACTION_NONE
+        if (needsBridge) {
+            com.cleanlauncher.lock.UnlockActivity.start(service, action, key)
+            // Kurz warten, damit die PIN-Abfrage schon darunter liegt und der System-Sperrbildschirm nicht aufblitzt
+            mainHandler.postDelayed({ hideLock() }, 180)
+        } else {
+            hideLock()
+        }
     }
 
     /** Ein anderes Fenster kommt nach vorne (Wecker, Anruf, Kamera …) -> Sperrbildschirm weg. */
