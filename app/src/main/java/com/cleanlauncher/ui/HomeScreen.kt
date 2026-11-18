@@ -227,7 +227,7 @@ fun LauncherRoot(activity: Activity, c: LauncherController, homePress: Int) {
                     }
                     SearchPillOrDots(c, pageCount)
                     if (prefs.dockEnabled) Dock(c, dock)
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(prefs.dockBottom.dp))
                 }
                 if (c.editMode) EditBar(c, Modifier.align(Alignment.TopCenter).padding(top = 2.dp))
             }

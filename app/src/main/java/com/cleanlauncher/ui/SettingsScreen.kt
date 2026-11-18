@@ -219,6 +219,8 @@ private fun MainSettings(onBack: () -> Unit, open: (Screen) -> Unit, autoImport:
                     }
                     Divider()
                     IntSlider("Seitenabstand", prefs.dockMargin, 0..40, suffix = " dp") { prefs.dockMargin = it }
+                    Divider()
+                    IntSlider("Abstand nach unten", prefs.dockBottom, 0..60, suffix = " dp") { prefs.dockBottom = it }
                 }
             }
 

@@ -146,6 +146,8 @@ class Prefs private constructor(context: Context) {
     var dockColor by int("dock_color", 0xFFFFFFFF.toInt())
     var dockCorner by int("dock_corner", 34)
     var dockMargin by int("dock_margin", 10)
+    /** Abstand unter dem Dock (Platz für den Gesten-Strich) */
+    var dockBottom by int("dock_bottom", 20)
     var dockShowLabels by bool("dock_labels", false)
 
     // ---------- Startbildschirm ----------
