@@ -1063,6 +1063,7 @@ private fun SystemWideSection(prefs: Prefs) {
     val tick = resumeTick()
     val active = remember(tick) { SystemActions.accessibilityEnabled }
     val canWrite = remember(tick) { android.provider.Settings.System.canWrite(ctx) }
+    val secureOk = remember(tick) { SystemActions.canWriteSecure(ctx) }
     val dndAccess = remember(tick) {
         ctx.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted
     }
@@ -1084,14 +1085,41 @@ private fun SystemWideSection(prefs: Prefs) {
             ) { openSafe(ctx, appDetails(ctx)) }
         }
         Divider()
-        SwitchRow("Gestenleiste statt 3 Tasten", prefs.gestureBar, "Hochwischen = Home, hochwischen & halten = Übersicht") { prefs.gestureBar = it }
+        SwitchRow("Gestenleiste statt 3 Tasten", prefs.gestureBar, "Hochwischen = Home, hochwischen & halten = Übersicht") {
+            prefs.gestureBar = it
+            // Ohne unsere Leiste die Tasten auf jeden Fall wieder einblenden
+            if (!it && prefs.gestureHideButtons) {
+                SystemActions.setNavButtonsHidden(ctx, false)
+                prefs.gestureHideButtons = false
+            }
+        }
         if (prefs.gestureBar) {
             Divider()
             SwitchRow("Vom Rand wischen = Zurück", prefs.gestureBack, "Links oder rechts vom Bildschirmrand nach innen wischen") { prefs.gestureBack = it }
             Divider()
             SwitchRow("Seitlich über die Leiste = letzte App", prefs.gestureSwitchApps) { prefs.gestureSwitchApps = it }
             Divider()
-            SwitchRow("Leiste immer anzeigen", prefs.gestureBarAlways, "Falls die Xiaomi-Gesten eingeschaltet sind, aber nicht reagieren") { prefs.gestureBarAlways = it }
+            if (secureOk) {
+                SwitchRow("3 Tasten ausblenden", prefs.gestureHideButtons, "Die System-Tasten verschwinden ganz – nur noch der iOS-Strich") {
+                    if (SystemActions.setNavButtonsHidden(ctx, it)) {
+                        prefs.gestureHideButtons = it
+                    } else {
+                        android.widget.Toast.makeText(ctx, "Konnte die Tasten nicht ändern", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                ActionRow("3 Tasten ausblenden", "Einmalig per PC freischalten – tippen kopiert den Befehl", highlight = true) {
+                    val cm = ctx.getSystemService(android.content.ClipboardManager::class.java)
+                    cm.setPrimaryClip(
+                        android.content.ClipData.newPlainText("ADB", "adb shell pm grant com.cleanlauncher android.permission.WRITE_SECURE_SETTINGS"),
+                    )
+                    android.widget.Toast.makeText(ctx, "Befehl kopiert – am PC ausführen, dann hier einschalten", android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+            if (!prefs.gestureHideButtons) {
+                Divider()
+                SwitchRow("Leiste immer anzeigen", prefs.gestureBarAlways, "Falls die Xiaomi-Gesten eingeschaltet sind, aber nicht reagieren") { prefs.gestureBarAlways = it }
+            }
             Divider()
             ChoiceRow(
                 "Aussehen der Leiste",

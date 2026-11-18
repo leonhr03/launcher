@@ -190,6 +190,8 @@ class Prefs private constructor(context: Context) {
     var gestureSwitchApps by bool("gesture_switch_apps", true)
     /** Eigene Gestenleiste auch zeigen, wenn das System angeblich schon Wischgesten nutzt */
     var gestureBarAlways by bool("gesture_bar_always", false)
+    /** System-Tasten ganz ausblenden (braucht einmalig die ADB-Freigabe WRITE_SECURE_SETTINGS) */
+    var gestureHideButtons by bool("gesture_hide_buttons", false)
     var iosShade by bool("ios_shade", false)
     var dynamicIsland by bool("dynamic_island", false)
     var islandOffsetY by int("island_offset_y", 0)

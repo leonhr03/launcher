@@ -140,6 +140,26 @@ object SystemActions {
         }
     }
 
+    fun canWriteSecure(context: Context): Boolean =
+        context.checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Blendet die 3 System-Tasten aus bzw. wieder ein (braucht WRITE_SECURE_SETTINGS per ADB).
+     * Xiaomi: Vollbild-Modus ohne Tasten + Xiaomi-Gestenstrich verstecken (unsere Leiste ersetzt ihn).
+     * Android 10 und älter: zusätzlich "immersive" Navigation für alle Apps.
+     */
+    fun setNavButtonsHidden(context: Context, hidden: Boolean): Boolean = try {
+        val cr = context.contentResolver
+        Settings.Global.putInt(cr, "force_fsg_nav_bar", if (hidden) 1 else 0)
+        runCatching { Settings.Global.putInt(cr, "hide_gesture_line", if (hidden) 1 else 0) }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            runCatching { Settings.Global.putString(cr, "policy_control", if (hidden) "immersive.navigation=*" else null) }
+        }
+        true
+    } catch (e: Exception) {
+        false
+    }
+
     fun isDefaultLauncher(context: Context): Boolean {
         val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
         val res = context.packageManager.resolveActivity(i, 0)

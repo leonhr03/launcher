@@ -56,6 +56,7 @@ class OverlayLifecycleOwner : SavedStateRegistryOwner {
     override val savedStateRegistry: SavedStateRegistry get() = ssc.savedStateRegistry
 
     fun start() {
+        if (prefs.gestureHideButtons && prefs.gestureBar) SystemActions.setNavButtonsHidden(service, true)
         ssc.performAttach()
         ssc.performRestore(null)
         registry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
@@ -140,6 +141,7 @@ class OverlayManager(private val service: AccessibilityService) {
     }
 
     fun start() {
+        if (prefs.gestureHideButtons && prefs.gestureBar) SystemActions.setNavButtonsHidden(service, true)
         runCatching {
             val cr = service.contentResolver
             cr.registerContentObserver(android.provider.Settings.Global.getUriFor("force_fsg_nav_bar"), false, navObserver)
@@ -163,7 +165,7 @@ class OverlayManager(private val service: AccessibilityService) {
         scope.launch {
             snapshotFlow {
                 listOf(
-                    prefs.gestureBar, prefs.gestureBarAlways, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
+                    prefs.gestureBar, prefs.gestureBarAlways, prefs.gestureHideButtons, prefs.gestureBack, prefs.gestureBarStyle, prefs.iosShade, prefs.lockEnabled,
                     prefs.dynamicIsland, prefs.islandOffsetY, prefs.islandWidth,
                 )
             }.collect {
@@ -176,6 +178,8 @@ class OverlayManager(private val service: AccessibilityService) {
     }
 
     fun stop() {
+        // Bedienungshilfe aus -> keine Gestenleiste mehr -> System-Tasten zurückholen
+        if (prefs.gestureHideButtons) SystemActions.setNavButtonsHidden(service, false)
         runCatching { service.unregisterReceiver(powerReceiver) }
         runCatching { service.unregisterReceiver(screenReceiver) }
         runCatching { service.contentResolver.unregisterContentObserver(navObserver) }
@@ -226,7 +230,8 @@ class OverlayManager(private val service: AccessibilityService) {
 
     /** Nutzt das Handy schon System-Wischgesten? Dann braucht es unsere Leiste nicht. */
     private fun systemGestures(): Boolean {
-        if (prefs.gestureBarAlways) return false
+        // Tasten selbst ausgeblendet -> unsere Leiste ersetzt sie, also immer anzeigen
+        if (prefs.gestureBarAlways || prefs.gestureHideButtons) return false
         // Echte Navigationsleiste messen: 3 Tasten sind ~48 dp hoch, der Gesten-Strich höchstens ~24 dp.
         // (force_fsg_nav_bar allein reicht nicht – bei Xiaomi steht es oft auf 1, obwohl die Gesten nicht gehen.)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
