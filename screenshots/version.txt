@@ -1,2 +1,2 @@
-    versionCode=123 minSdk=26 targetSdk=35
-    versionName=2.23
+    versionCode=124 minSdk=26 targetSdk=35
+    versionName=2.24
